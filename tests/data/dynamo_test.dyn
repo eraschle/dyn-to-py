@@ -1,0 +1,99 @@
+{
+  "Uuid": "477c0da0-efa5-4b8c-a446-df5654bdf137",
+  "IsCustomNode": false,
+  "Description": "",
+  "Name": "some_name",
+  "ElementResolver": {
+    "ResolutionMap": {}
+  },
+  "Inputs": [],
+  "Outputs": [],
+  "Nodes": [
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "Code": "print('Hello World')",
+      "Engine": "IronPython2",
+      "EngineName": "IronPython2",
+      "VariableInputPorts": true,
+      "Id": "cf09675ffc59458cafaf19d3c14845ed",
+      "NodeType": "PythonScriptNode",
+      "Inputs": [
+        {
+          "Id": "b7bc2b7feb0740c1896ff060a5eea641",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "9dad787793654ac7a003168bf548896c",
+          "Name": "OUT",
+          "Description": "Ergebnis des Python-Skripts",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Führt ein eingebettetes Python-Skript aus."
+    }
+  ],
+  "Connectors": [],
+  "Dependencies": [],
+  "NodeLibraryDependencies": [],
+  "Thumbnail": "",
+  "GraphDocumentationURL": null,
+  "ExtensionWorkspaceData": [],
+  "Author": "None provided",
+  "Linting": {
+    "activeLinter": "Keine",
+    "activeLinterId": "7b75fb44-43fd-4631-a878-29f4d5d8399a",
+    "warningCount": 0,
+    "errorCount": 0
+  },
+  "Bindings": [],
+  "View": {
+    "Dynamo": {
+      "ScaleFactor": 1.0,
+      "HasRunWithoutCrash": true,
+      "IsVisibleInDynamoLibrary": true,
+      "Version": "2.19.3.6394",
+      "RunType": "Manual",
+      "RunPeriod": "1000"
+    },
+    "Camera": {
+      "Name": "_Hintergrundvorschau",
+      "EyeX": -28.62179946899414,
+      "EyeY": 36.59028244018555,
+      "EyeZ": 106.17202758789062,
+      "LookX": 23.62179946899414,
+      "LookY": -25.590282440185547,
+      "LookZ": -114.17202758789062,
+      "UpX": 0.0,
+      "UpY": 1.0,
+      "UpZ": 0.0
+    },
+    "ConnectorPins": [],
+    "NodeViews": [
+      {
+        "Id": "cf09675ffc59458cafaf19d3c14845ed",
+        "Name": "Unique",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": false,
+        "X": -2756.927373726947,
+        "Y": 5131.864797721523
+      }
+    ],
+    "Annotations": [],
+    "X": 1573.0142504285031,
+    "Y": -598.1513750622651,
+    "Zoom": 0.19691946816436834
+  }
+}

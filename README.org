@@ -1,0 +1,20 @@
+
+Ist ein Tool um Python Code zwischen Dynamo-Scripts und IDE zu synchronisieren.
+Dadurch kann der Python Code mit der Unterstützung einer IDE und Stubs bearbeitet und angepasst werden.
+
+* Features:
+- Auslesen von Code aus den Skripts in einem Verzeichnis in separate Python Dateien
+- Einfügen von Bearbeiteten Code in die Dynamo-Skript
+- Konfiguration von verschiedenen Quellen und Ziel-Verzeichnissen.
+
+* Aufgaben
+** TODO Test schreiben
+Die Funktionen mit UnitTest überprüfen
+** TODO GUI erstellen
+Für einfachere Benutzung vom Tool
+** BCKL Live aktualisierung von Code
+:LOGBOOK:
+- State "BCKL"       from "TODO"       [2024-10-03 Do 23:45]
+:END:
+Aktuell muss ein Skript geschlossen und wieder geöffnet werden, bevor der neue Code von Dynamo verwendet wird.
+Nach Möglichkeiten suchen nach der Aktualisierung von Dynamo verwendet wird.
