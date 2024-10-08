@@ -1,7 +1,8 @@
 from pathlib import Path
 from typing import Any, List, Mapping, MutableMapping, OrderedDict
 
-from dynpy.core import utils
+from dynpy.core import reader
+from dynpy.core.models import PythonEngine
 
 KEY_ID = "Id"
 KEY_NAME = "Name"
@@ -33,8 +34,9 @@ def node_code(content: Mapping[str, Any]) -> str:
     return content.get(KEY_CODE, "NO CODE")
 
 
-def node_engine(content: Mapping[str, Any]) -> str:
-    return content.get(KEY_ENGINE, "IronPython2")
+def node_engine(content: Mapping[str, Any]) -> PythonEngine:
+    engine = content.get(KEY_ENGINE, "IronPython2")
+    return PythonEngine(engine)
 
 
 class DynamoFileContext:
@@ -72,7 +74,7 @@ class DynamoFileContext:
         self.nodes[idx][KEY_CODE] = code
 
     def __enter__(self) -> "DynamoFileContext":
-        self.content = utils.read_json(self.path)
+        self.content = reader.read_json(self.path)
         return self
 
     def __exit__(self, exc_type, exc_value, traceback) -> None:
@@ -80,4 +82,4 @@ class DynamoFileContext:
             raise exc_value
         if not self.save:
             return
-        utils.write_json(self.path, self.content)
+        reader.write_json(self.path, self.content)

@@ -1,7 +1,6 @@
-import json
 import re
 from pathlib import Path
-from typing import Callable, List, OrderedDict
+from typing import Callable, List
 
 NAME_LOOKUP = [" ", "<", ">", "?", "|", "*", "/", "\\", "\"", ":", ";", ",", "-"]
 NAME_SEPARATOR = "_"
@@ -36,25 +35,3 @@ def get_files(current: Path, callback: Callable[[Path], bool]) -> List[Path]:
             continue
         dyn_files.append(path)
     return dyn_files
-
-
-def read_json(path: Path) -> OrderedDict:
-    with open(path, mode="r", encoding="utf8") as file:
-        return json.load(file, object_pairs_hook=OrderedDict)
-
-
-def write_json(path: Path, content: OrderedDict) -> None:
-    with open(path, mode="w", encoding="utf8") as file:
-        json.dump(content, file, indent=2, ensure_ascii=False)
-
-
-def read_python(path: Path) -> List[str]:
-    with open(path, mode="r", encoding="utf8") as file:
-        code = file.read()
-        return code.splitlines(keepends=False)
-
-
-def write_python(path: Path, content: List[str]) -> None:
-    code = "\n".join(content)
-    with open(path, mode="w", encoding="utf8") as file:
-        file.write(code)

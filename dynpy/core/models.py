@@ -1,11 +1,20 @@
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, ClassVar, Dict, Iterable, List, Mapping, OrderedDict
+from typing import (
+    Any,
+    Callable,
+    ClassVar,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    OrderedDict,
+)
 
-from dynpy.core import utils
-
-from .actions import ActionType, ConvertAction
+from dynpy.core import paths as pth
+from dynpy.core import reader
+from dynpy.core.actions import ActionType, ConvertAction
 
 
 @dataclass(frozen=True)
@@ -18,34 +27,23 @@ class NodeView(DynamoNode):
     name: str
 
 
+class PythonEngine(str, Enum):
+    IRON_PYTHON_2 = "IronPython2"
+    IRON_PYTHON_3 = "IronPython3"
+    C_PYTHON_3 = "CPython3"
+
+
 @dataclass(frozen=True)
 class CodeNode(DynamoNode):
     code: str
-    engine: str
+    engine: PythonEngine
 
 
 @dataclass(frozen=True)
 class NodeInfo:
-    file_prefix: ClassVar[str] = "# -*-"
-    separator: ClassVar[str] = ";"
-
     uuid: str
-    engine: str
+    engine: PythonEngine
     path: str
-
-    def as_str(self) -> str:
-        """Return NodeInfo as string.
-
-        NodeInfo string for python file
-
-        Returns
-        -------
-        str
-            NodeInfo as string
-        """
-        infos = [f"{key}: {value}" for key, value in asdict(self).items()]
-        info_str = f"{self.separator} ".join(infos)
-        return f"{self.file_prefix} {info_str}"
 
 
 @dataclass(frozen=True)
@@ -60,10 +58,10 @@ class ContentNode:
 
     @property
     def node_name(self) -> str:
-        return utils.clean_name(self.view.name)
+        return pth.clean_name(self.view.name)
 
     @property
-    def code_engine(self) -> str:
+    def code_engine(self) -> PythonEngine:
         return self.node.engine
 
     @property
@@ -75,7 +73,7 @@ class ContentNode:
         return NodeInfo(
             self.node_id,
             self.code_engine,
-            utils.path_as_str(self.path),
+            pth.path_as_str(self.path),
         )
 
     @property
@@ -85,7 +83,7 @@ class ContentNode:
     @property
     def as_dir(self) -> str:
         path = self.path.with_suffix("")
-        return utils.clean_name(path.name)
+        return pth.clean_name(path.name)
 
     @property
     def export_path(self) -> Path:
@@ -123,25 +121,25 @@ class SourceConfig:
         return path.suffix in self.source_ext
 
     def source_files(self) -> List[Path]:
-        return utils.get_files(self.source_path, self.is_source)
+        return pth.get_files(self.source_path, self.is_source)
 
     def is_export(self, path: Path) -> bool:
         return path.suffix == self.export_ext
 
     def export_files(self) -> List[Path]:
-        return utils.get_files(self.export_path, self.is_export)
+        return pth.get_files(self.export_path, self.is_export)
 
     def _check_is_source(self, file_path: Path) -> None:
         if not file_path.exists():
             raise FileNotFoundError(f"{file_path} not found")
-        if utils.path_as_str(file_path).startswith(self.source):
+        if pth.path_as_str(file_path).startswith(self.source):
             return
         raise Exception(f"{file_path} is not sub path of {self.source}")
 
     def export_file_path(self, node: ContentNode) -> Path:
         self._check_is_source(node.path)
         path = node.export_path.with_suffix(self.export_ext)
-        return utils.replace_path(path, self.source, self.export)
+        return pth.replace_path(path, self.source, self.export)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -176,7 +174,7 @@ class ConvertConfig:
         raise Exception(f"Source {name} not found in the configuration")
 
     def save(self, path: Path) -> None:
-        utils.write_json(path, OrderedDict(self.to_dict()))
+        reader.write_json(path, OrderedDict(self.to_dict()))
 
 
 class Direction(str, Enum):

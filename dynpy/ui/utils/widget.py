@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from tkinter import (
     Button,
     Entry,
@@ -45,7 +45,7 @@ class UiArgs:
     column: int = 0
     columnspan: int = 1
     sticky: str = EW
-    padding: UiPadding = UiPadding()
+    padding: UiPadding = field(default_factory=UiPadding)
     west_min: int = 140
     east_min: int = 150
 
@@ -140,7 +140,9 @@ def get_sticky(element: UiWidget) -> str:
     Parameters:
     element (UiElement) the ui element
     """
-    if isinstance(element, (Frame, LabelFrame)) or (isinstance(element, Label) and element['relief'] == GROOVE):
+    if isinstance(element, (Frame, LabelFrame)) or (
+        isinstance(element, Label) and element['relief'] == GROOVE
+    ):
         return NSEW
     return EW
 
@@ -159,7 +161,11 @@ def setup_grid(element: UiWidget, args: UiArgs) -> None:
     element.grid(cnf=attr_dict)
 
 
-def setup_change_button(button: Button, command: Callable, label: Optional[Label] = None) -> None:
+def setup_change_button(
+    button: Button,
+    command: Callable,
+    label: Optional[Label] = None,
+) -> None:
     """
     Configures the "Change" button with the default options
     and adds the click command
@@ -173,7 +179,12 @@ def setup_change_button(button: Button, command: Callable, label: Optional[Label
     setup_button(button, 'Change', command, label)
 
 
-def setup_button(button: Button, text: Union[str, Variable], command: Callable, label: Optional[Label] = None) -> None:
+def setup_button(
+    button: Button,
+    text: Union[str, Variable],
+    command: Callable,
+    label: Optional[Label] = None,
+) -> None:
     """
     Configures the button with the default options
     and adds the click command
@@ -196,7 +207,7 @@ def setup_button(button: Button, text: Union[str, Variable], command: Callable, 
 
 
 def add_label_button_1(label: Label, command: Callable) -> None:
-    label.bind('<Button-1>', lambda event: command())
+    label.bind('<Button-1>', lambda _: command())
 
 
 def setup_combobox(combobox: Combobox, selected: Callable) -> None:
@@ -356,14 +367,14 @@ def get_okay_button(frame: Frame) -> Optional[Button]:
 
 def get_button_frame(
     master: Misc,
-    args: Dict[str, Any],
+    args: UiArgs,
     okay_command: Callable,
     cancel_command: Optional[Callable],
 ) -> Frame:
     frame = Frame(master)
     frame.grid_columnconfigure(0, weight=1)
-    frame.grid_columnconfigure(1, minsize=args['east_min'])
-    frame.grid_columnconfigure(2, minsize=args['east_min'])
+    frame.grid_columnconfigure(1, minsize=args.east_min)
+    frame.grid_columnconfigure(2, minsize=args.west_min)
     grid_args = get_grid_args(args)
     if cancel_command is not None:
         btn_cancel = Button(frame, text='Cancel', command=cancel_command)

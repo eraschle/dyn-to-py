@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Dict, Iterable, List, Mapping
 
-from dynpy import factory
+from dynpy.core import factory
 from dynpy.core.context import DynamoFileContext
 from dynpy.core.models import ConvertHandler, PythonFile
 
