@@ -1,7 +1,7 @@
 import tkinter as tk
 
 from dynpy.ui.utils import widget as ui
-from dynpy.ui.source import SourceFrame
+from dynpy.ui.source import ConvertConfigFrame
 
 
 class AppView(tk.Tk):
@@ -9,7 +9,7 @@ class AppView(tk.Tk):
         super().__init__()
         self.args = ui.UiArgs()
         self.app_frame = tk.Frame(self)
-        source_frame = SourceFrame(self.app_frame)
+        source_frame = ConvertConfigFrame(self.app_frame)
         source_frame.grid(row=0, column=0, sticky=tk.NSEW)
 
         self.args.add_row()

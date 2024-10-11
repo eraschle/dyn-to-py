@@ -1,27 +1,13 @@
 #!/usr/bin/env python3
 
+import tkinter as tk
 from dataclasses import asdict, dataclass, field
-from tkinter import (
-    Button,
-    Entry,
-    Frame,
-    Label,
-    Misc,
-    Scale,
-    StringVar,
-    Text,
-    Tk,
-    Toplevel,
-    Variable,
-    Widget,
-)
-from tkinter.constants import DISABLED, EW, GROOVE, NORMAL, NSEW, W
-from tkinter.ttk import Checkbutton, Combobox, LabelFrame, Treeview
-from typing import Any, Callable, Dict, Optional, Sequence, Tuple, Union
+from tkinter import ttk
+from tkinter.constants import EW, GROOVE, NSEW, W
+from typing import Any, Callable, Dict, Optional, Self, Tuple, Union
 
-
-UiElement = Union[Button, Combobox, Text, Label, Entry, Scale, Checkbutton]
-UiWidget = Union[UiElement, Frame, LabelFrame, Widget, Treeview]
+UiElement = Union[tk.Button, tk.Label, tk.Entry]
+UiWidget = Union[UiElement, tk.Frame, tk.LabelFrame, ttk.Treeview]
 
 
 @dataclass
@@ -37,6 +23,21 @@ class UiPadding:
 
     def as_dict(self) -> Dict[str, Any]:
         return asdict(self)
+
+
+@dataclass
+class UiMatrix:
+    index: int
+    weight: int = 1
+
+    def as_tuple(self) -> Tuple[int, int]:
+        return self.index, self.weight
+
+    def as_dict(self) -> Dict[str, int]:
+        return asdict(self)
+
+    def __iter__(self):
+        return iter(self.as_tuple())
 
 
 @dataclass
@@ -68,69 +69,17 @@ class UiArgs:
         attr_dict.update(kwargs)
         return attr_dict
 
+    def grid_args(self, **kwargs) -> Dict[str, Any]:
+        grid_args = self.as_dict()
+        for key in ('padx_e', 'west_min', 'east_min'):
+            if key not in grid_args:
+                continue
+            grid_args.pop(key)
+        grid_args.update(kwargs)
+        return grid_args
 
-def enable(element: UiElement) -> None:
-    """
-    Activates the ui element
-
-    Parameters:
-    element(UiElement) the element to enable
-    """
-    if isinstance(element, Combobox):
-        element.configure(state='readonly')
-    else:
-        element.configure(state=NORMAL)
-
-
-def disable(element: UiElement) -> None:
-    """
-    Deactivates the ui element
-
-    Parameters:
-    element(UiElement) the element to disable
-    """
-    element.configure(state=DISABLED)
-
-
-def is_disabled(element: UiElement) -> bool:
-    """
-    Checks if the ui element is deactivated
-
-    Parameters:
-    element(UiElement) the element to disable
-    """
-    return element['state'] == DISABLED
-
-
-def combobox_add(combobox: Combobox, names: Sequence[str]) -> None:
-    current = combobox.get()
-    combobox['values'] = names
-    if len(names) == 0:
-        return
-    index = 0
-    if current in names:
-        index = names.index(current)
-    combobox.current(index)
-
-
-def visible(element: UiElement) -> None:
-    """
-    Shows ui element visible in the grid
-
-    Parameters:
-    element(UiElement) the element to show
-    """
-    element.grid()
-
-
-def hide(element: UiElement) -> None:
-    """
-    Hides the ui element in the grid but remembers the configuration
-
-    Parameters:
-    element(UiElement) the element to hide
-    """
-    element.grid_remove()
+    def create(self, *, column: int = 0, row: int = 0, sticky: str = EW, **kwargs) -> "UiArgs":
+        return UiArgs(**self.to_dict(column=column, row=row, sticky=sticky, **kwargs))
 
 
 def get_sticky(element: UiWidget) -> str:
@@ -140,8 +89,8 @@ def get_sticky(element: UiWidget) -> str:
     Parameters:
     element (UiElement) the ui element
     """
-    if isinstance(element, (Frame, LabelFrame)) or (
-        isinstance(element, Label) and element['relief'] == GROOVE
+    if isinstance(element, (tk.Frame, tk.LabelFrame)) or (
+        isinstance(element, tk.Label) and element['relief'] == GROOVE
     ):
         return NSEW
     return EW
@@ -155,74 +104,13 @@ def setup_grid(element: UiWidget, args: UiArgs) -> None:
     element (UiElement) the ui element
     """
     names = ["row", "column", "columnspan", "padx", "pady"]
-    if not isinstance(element, (Button, Frame, LabelFrame)):
+    if not isinstance(element, (tk.Button, tk.Frame, tk.LabelFrame)):
         names.append("ipady")
     attr_dict = args.to_dict(*names, sticky=get_sticky(element))
     element.grid(cnf=attr_dict)
 
 
-def setup_change_button(
-    button: Button,
-    command: Callable,
-    label: Optional[Label] = None,
-) -> None:
-    """
-    Configures the "Change" button with the default options
-    and adds the click command
-
-    Parameters:
-    button (Button) button to configure
-    args (Dict[str, Any]) default gui args
-    command (Callable) click command
-    label (Label) if the label is not None, a mouse-click event with the command will be added
-    """
-    setup_button(button, 'Change', command, label)
-
-
-def setup_button(
-    button: Button,
-    text: Union[str, Variable],
-    command: Callable,
-    label: Optional[Label] = None,
-) -> None:
-    """
-    Configures the button with the default options
-    and adds the click command
-
-    Parameters:
-    button (Button) button to configure
-    text (str) button text
-    args (Dict[str, Any]) default gui args
-    command (Callable) click command
-    label (Label) if the label is not None, a mouse-click event with the command will be added
-    """
-    button.configure(command=command)
-    if isinstance(text, Variable):
-        button.configure(textvariable=text)
-    elif isinstance(text, str):
-        button.configure(text=text)
-    if label is None:
-        return
-    add_label_button_1(label, command)
-
-
-def add_label_button_1(label: Label, command: Callable) -> None:
-    label.bind('<Button-1>', lambda _: command())
-
-
-def setup_combobox(combobox: Combobox, selected: Callable) -> None:
-    """
-    Configures the combobox with the default options
-    and adds the selected function if any
-
-    Parameters:
-    combobox (Combobox) the label to hide
-    """
-    combobox.configure(state='readonly')
-    combobox.bind("<<ComboboxSelected>>", selected)
-
-
-def setup_label(label: Label, text: str | Variable) -> Label:
+def setup_label(label: tk.Label, text: str | tk.Variable) -> tk.Label:
     """
     Configures the label with the default options
 
@@ -233,216 +121,86 @@ def setup_label(label: Label, text: str | Variable) -> Label:
     label.configure(anchor=W)
     if isinstance(text, str):
         label.configure(text=text)
-    elif isinstance(text, Variable):
+    elif isinstance(text, tk.Variable):
         label.configure(textvariable=text)
     return label
 
 
-def setup_read_only(label: Label, variable: Optional[StringVar] = None) -> Label:
-    """
-    Configures the read only label with the default options
-
-    Parameters:
-    label(Label) the label to hide
-    """
-    setup_label(label, '')
-    label.configure(relief=GROOVE)
-    if variable is not None:
-        label.configure(textvariable=variable)
-    return label
-
-
-def widget_text(widget: Widget, text: str) -> None:
-    """
-    Changes the widget text
-
-    Parameters:
-    widget (Widget) the widget
-    text (str) the text of widget
-    """
-    widget['text'] = text
-
-
-def set_label_entry(
-    label: Label,
-    label_text: str | Variable,
-    entry: Entry,
-    entry_value: Variable,
-    args: UiArgs,
-    key_event: Optional[Callable[[Any], None]] = None,
-) -> None:
-    """Setup a label with an entry user input
-
-    :param label: The label object
-    :type label: Label
-    :param label_text: The label text
-    :type label_text: str
-    :param entry: The entry object
-    :type entry: Entry
-    :param string_var: The Variable for the entry value
-    :type string_var: Variable
-    :param grid_args: Dictionary with grid values
-    :type grid_args: Dict[str, Any]
-    :param key_event: A key event function for the entry, defaults to None
-    :type key_event: Optional[Callable[[Any], None]], optional
-    """
-    setup_label(label, label_text)
-    label.grid(cnf=get_grid_args(args))
-    if isinstance(entry_value, str):
-        entry_value = StringVar(value=entry_value)
-    entry.configure(textvariable=entry_value)
-    args.add_column()
-    entry.grid(cnf=get_grid_args(args))
-    if key_event is None:
-        return
-    entry.bind("<KeyRelease>", key_event)
-
-
-def get_combobox(event) -> Optional[Combobox]:
-    # pylint: disable=missing-function-docstring
-    combobox = event.widget
-    if not isinstance(combobox, Combobox):
-        return None
-    return combobox
-
-
-def get_entry(event) -> Optional[Entry]:
-    # pylint: disable=missing-function-docstring
-    entry = event.widget
-    if not isinstance(entry, Entry):
-        return None
-    return entry
-
-
-def get_grid_args(args: UiArgs) -> Dict[str, Any]:
-    grid_args = args.as_dict()
-    if 'padx_e' in grid_args:
-        grid_args.pop('padx_e')
-    if 'west_min' in grid_args:
-        grid_args.pop('west_min')
-    if 'east_min' in grid_args:
-        grid_args.pop('east_min')
-    if 'sticky' not in grid_args:
-        grid_args['sticky'] = EW
-    return grid_args
-
-
-def forgot_children(widget: UiWidget, clean_weight: bool = False):
-    """Forgot all children of the widget in the grid layout.
-
-    :param widget: The widget to forgot children.
-    :type widget: UiWidget
-    """
-    for child in widget.children.values():
-        if clean_weight:
-            clean_grid_weight(widget, 'column')
-            clean_grid_weight(widget, 'row')
-        child.grid_forget()
-
-
-def clean_grid_weight(widget: Widget, config: str, weight: int = 0):
-    """Sets the grid weight for column and row to the given weight.
-
-    :param widget: The widget location in the grid to be cleaned.
-    :type widget: Widget
-    :param config: The name of the config. Allowed are 'column' and 'row'
-    :type config: str
-    :param weight: The weight value to be set, defaults to 0
-    :type weight: int, optional
-    """
-    grid_info = widget.grid_info()
-    if config not in grid_info:
-        return
-    widget_config = grid_info[config]  # type: ignore
-    widget.master.grid_columnconfigure(widget_config, weight=weight)
-
-
-def get_okay_button(frame: Frame) -> Optional[Button]:
+def get_okay_button(frame: tk.Frame) -> Optional[tk.Button]:
     for child in frame.children.values():
-        if not isinstance(child, Button) or child['text'] != 'Okay':
+        if not isinstance(child, tk.Button) or child['text'] != 'Okay':
             continue
         return child
     return None
 
 
+def _create_button(
+    frame: tk.Frame, name: str, args: UiArgs, command: Callable[[], None]
+) -> tk.Frame:
+    button = tk.Button(frame, text=name, command=command)
+    button.grid(
+        row=args.row,
+        column=args.column,
+        sticky=args.sticky,
+        padx=args.padding.padx,
+        pady=args.padding.pady,
+        ipady=args.padding.ipady,
+    )
+    return frame
+
+
+def create_okay_button(frame: tk.Frame, args: UiArgs, command: Callable[[], None]) -> tk.Frame:
+    return _create_button(frame, 'Okay', args, command)
+
+
+def create_cancel_button(frame: tk.Frame, args: UiArgs, command: Callable[[], None]) -> tk.Frame:
+    return _create_button(frame, 'Cancel', args, command)
+
+
 def get_button_frame(
-    master: Misc,
+    master: tk.Misc,
     args: UiArgs,
-    okay_command: Callable,
-    cancel_command: Optional[Callable],
-) -> Frame:
-    frame = Frame(master)
+    okay_cmd: Callable,
+    cancel_cmd: Optional[Callable],
+) -> tk.Frame:
+    frame = tk.Frame(master)
     frame.grid_columnconfigure(0, weight=1)
     frame.grid_columnconfigure(1, minsize=args.east_min)
     frame.grid_columnconfigure(2, minsize=args.west_min)
-    grid_args = get_grid_args(args)
-    if cancel_command is not None:
-        btn_cancel = Button(frame, text='Cancel', command=cancel_command)
-        btn_cancel.grid(
-            row=0,
-            column=1,
-            sticky=EW,
-            padx=grid_args['padx'],
-            pady=grid_args['pady'],
-            ipady=grid_args['ipady'],
-        )
-        add_okay_cancel_key_event(btn_cancel, okay_command, cancel_command)
-    btn_okay = Button(frame, text='Okay', command=okay_command)
-    btn_okay.grid(
-        row=0,
-        column=2,
-        sticky=EW,
-        padx=grid_args['padx'],
-        pady=grid_args['pady'],
-        ipady=grid_args['ipady'],
-    )
-    add_okay_cancel_key_event(btn_okay, okay_command, cancel_command)
+    args.sticky = EW
+    if cancel_cmd is not None:
+        btn_cancel = create_cancel_button(frame, args, cancel_cmd)
+        add_okay_cancel_key_event(btn_cancel, okay_cmd, cancel_cmd)
+    args.add_column()
+    btn_okay = create_okay_button(frame, args, okay_cmd)
+    add_okay_cancel_key_event(btn_okay, okay_cmd, cancel_cmd)
     return frame
 
 
 def add_okay_cancel_key_event(
-    widget: Widget,
-    okay_command: Callable[[], None],
-    cancel_command: Optional[Callable[[], None]],
+    widget: tk.Widget,
+    okay_cmd: Callable[[], None],
+    cancel_cmd: Optional[Callable[[], None]],
 ):
     def okay_key_command(_):
-        return okay_command()
+        return okay_cmd()
 
     widget.bind('<Return>', okay_key_command)
-    if cancel_command is None:
+    if cancel_cmd is None:
         return
 
-    def cancel_key_command(_):
-        return cancel_command()
+    def cancel_key_cmd(_):
+        return cancel_cmd()
 
-    widget.bind('<Escape>', cancel_key_command)
+    widget.bind('<Escape>', cancel_key_cmd)
 
 
-def center_on_screen(window: Tk, width=900, height=800):
+def center_on_screen(window: tk.Tk, width: float = 900, height: float = 800):
     # get screen width and height
-    screen_width = window.winfo_screenwidth()
-    screen_height = window.winfo_screenheight()
+    scr_width = window.winfo_screenwidth()
+    scr_height = window.winfo_screenheight()
 
     # calculate position x and y coordinates
-    x_coord = int((screen_width / 2) - (width / 2))
-    y_coord = int((screen_height / 2) - (height / 2))
-    window.geometry(f'{width}x{height}+{x_coord}+{y_coord}')
-
-
-def center_on_frame(frame: Misc, dialog: Toplevel):
-    points = center_points(frame)
-    dialog.update_idletasks()
-    top_width = dialog.winfo_width()
-    top_height = dialog.winfo_height()
-    top_x = int(points[0] - (top_width / 2))
-    top_y = int(points[1] - (top_height / 2))
-    dialog.geometry(f'+{int(top_x)}+{int(top_y)}')
-
-
-def center_points(frame: Misc) -> Tuple:
-    top = frame.winfo_toplevel()
-    width = top.winfo_width()
-    height = top.winfo_height()
-    middle_x = int(top.winfo_x() + (width / 2))
-    middle_y = int(top.winfo_y() + (height / 2))
-    return (middle_x, middle_y)
+    x_center = int((scr_width / 2) - (width / 2))
+    y_center = int((scr_height / 2) - (height / 2))
+    window.geometry(f'{width}x{height}+{x_center}+{y_center}')

@@ -15,8 +15,8 @@ def _format_level(ends_with: Optional[str] = None) -> str:
     return "'%(levelname)-8s" + (ends_with or "")
 
 
-def _format_time(ends_with: Optional[str] = None) -> str:
-    return "%(asctime)-12s" + (ends_with or "")
+# def _format_time(ends_with: Optional[str] = None) -> str:
+#     return "%(asctime)-12s" + (ends_with or "")
 
 
 def _format_name(ends_with: Optional[str] = None) -> str:

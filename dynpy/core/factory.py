@@ -62,7 +62,7 @@ def convert_config(path: Path) -> ConvertConfig:
     )
 
 
-def _default_remove_action() -> RemoveLineAction:
+def default_remove_action() -> RemoveLineAction:
     return RemoveLineAction(
         contains=[
             "# Load the Python Standard",
@@ -76,7 +76,7 @@ def _default_remove_action() -> RemoveLineAction:
     )
 
 
-def _default_type_ignore_action() -> TypeIgnoreAction:
+def default_type_ignore_action() -> TypeIgnoreAction:
     return TypeIgnoreAction(
         value="# type: ignore",
         contains=[
@@ -101,11 +101,11 @@ def default_convert_config() -> ConvertConfig:
             )
         ],
         actions={
-            ActionType.DELETE_: [
-                _default_remove_action(),
+            ActionType.REMOVE: [
+                default_remove_action(),
             ],
             ActionType.REPLACE: [
-                _default_type_ignore_action(),
+                default_type_ignore_action(),
             ],
         },
     )

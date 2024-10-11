@@ -12,12 +12,16 @@ def main():
         ui.center_on_screen(app_view)
         app_view.mainloop()
     except Exception as ex:  # pylint: disable=broad-except
-        logger.exception("Unhandled Exception", exc_info=ex, stack_info=True)
+        logger.exception(
+            "Unhandled Exception",
+            exc_info=ex,
+            stack_info=True,
+        )
         sys.exit(-1)
     else:
-        logger.info('Closing app')
+        logger.info("Closing app")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     log.config_logger()
     main()

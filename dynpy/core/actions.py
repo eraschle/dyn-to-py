@@ -86,5 +86,5 @@ class TypeIgnoreAction(ConvertAction):
 
 
 class ActionType(str, Enum):
-    DELETE_ = "DELETE"
+    REMOVE = "DELETE"
     REPLACE = "REPLACE"
