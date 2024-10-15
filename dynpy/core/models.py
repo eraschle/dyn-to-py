@@ -3,7 +3,6 @@ from enum import Enum
 from pathlib import Path
 from typing import (
     Any,
-    Callable,
     ClassVar,
     Dict,
     Iterable,
@@ -151,23 +150,34 @@ class SourceConfig:
 
 @dataclass(frozen=True)
 class ConvertConfig:
-    configs: List[SourceConfig]
+    sources: List[SourceConfig]
     actions: Mapping[ActionType, List[ConvertAction]] = field(default_factory=dict)
 
-    def get_actions(self, action: ActionType) -> List[ConvertAction]:
+    def add_source(self, source: SourceConfig) -> None:
+        if source in self.sources:
+            return
+        self.sources.append(source)
+
+    def update(self, source: SourceConfig) -> None:
+        if source not in self.sources:
+            return
+        index = self.sources.index(source)
+        self.sources[index] = source
+
+    def actions_by(self, action: ActionType) -> List[ConvertAction]:
         return self.actions.get(action, [])
 
     def _action_dict(self, action: ActionType) -> List[Dict[str, Any]]:
-        return [act.to_dict() for act in self.get_actions(action)]
+        return [act.to_dict() for act in self.actions_by(action)]
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "configs": [config.to_dict() for config in self.configs],
+            "configs": [config.to_dict() for config in self.sources],
             "actions": {action: self._action_dict(action) for action in ActionType},
         }
 
     def source_by(self, name: str) -> SourceConfig:
-        for source in self.configs:
+        for source in self.sources:
             if source.name != name:
                 continue
             return source
@@ -175,40 +185,3 @@ class ConvertConfig:
 
     def save(self, path: Path) -> None:
         reader.write_json(path, OrderedDict(self.to_dict()))
-
-
-class Direction(str, Enum):
-    TO_PYTHON = "TO_PYTHON"
-    TO_DYNAMO = "TO_DYNAMO"
-
-
-@dataclass(frozen=True)
-class ConvertHandler:
-    source_name: str
-    config: ConvertConfig
-    direction: Direction
-
-    @property
-    def source(self) -> SourceConfig:
-        return self.config.source_by(self.source_name)
-
-    def _apply_action(self, action_type: ActionType, lines: List[str]) -> List[str]:
-        for action in self.config.get_actions(action_type):
-            lines = action.apply(lines)
-        return lines
-
-    def _restore_action(self, action_type: ActionType, lines: List[str]) -> List[str]:
-        for action in self.config.get_actions(action_type):
-            lines = action.restore(lines)
-        return lines
-
-    @property
-    def action_func(self) -> Callable[[ActionType, List[str]], List[str]]:
-        if self.direction == Direction.TO_PYTHON:
-            return self._apply_action
-        return self._restore_action
-
-    def apply_action(self, lines: List[str]) -> List[str]:
-        for action_type in ActionType:
-            lines = self.action_func(action_type, lines)
-        return lines

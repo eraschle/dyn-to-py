@@ -1,22 +1,47 @@
 import tkinter as tk
+from tkinter.ttk import Notebook
 
+from dynpy.ui.action import ConvertActionView
+from dynpy.ui.convert import ConvertionView
+from dynpy.ui.interface import IConvertService
+from dynpy.ui.source import SourceListView
 from dynpy.ui.utils import widget as ui
-from dynpy.ui.source import ConvertConfigFrame
 
 
-class AppView(tk.Tk):
-    def __init__(self) -> None:
+class ConvertAppFrame(tk.Frame):
+    def __init__(self, master: tk.Misc, service: IConvertService):
+        super().__init__(master)
+        args = ui.UiArgs()
+        self.service = service
+        self.grid_columnconfigure(**args.column_args())
+        self.grid_rowconfigure(**args.row_args())
+        args = args.create()
+        self.tab_frame = Notebook(self)
+        self.tab_frame.grid_columnconfigure(**args.column_args())
+        self.tab_frame.grid_rowconfigure(**args.row_args())
+        self.tab_frame.grid(cnf=args.grid_args(sticky=tk.NSEW))
+        self.add_sources()
+        self.add_actions()
+        self.add_convert()
+
+    def add_sources(self):
+        self.source = SourceListView(self.tab_frame)
+        self.tab_frame.add(self.source, text="Source")
+
+    def add_actions(self):
+        self.actions = ConvertActionView(self.tab_frame)
+        self.tab_frame.add(self.actions, text="Actions")
+
+    def add_convert(self):
+        self.convert = ConvertionView(self.tab_frame)
+        self.tab_frame.add(self.convert, text="Convert")
+
+
+class ConvertApp(tk.Tk):
+    def __init__(self, service: IConvertService) -> None:
         super().__init__()
-        self.args = ui.UiArgs()
-        self.app_frame = tk.Frame(self)
-        source_frame = ConvertConfigFrame(self.app_frame)
-        source_frame.grid(row=0, column=0, sticky=tk.NSEW)
-
-        self.args.add_row()
-
-        self.app_frame.grid_columnconfigure(0, weight=1)
-        self.app_frame.grid_rowconfigure(0, weight=1)
-        self.app_frame.grid(row=0, column=0, sticky=tk.NSEW)
-
-        self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(0, weight=1)
+        args = ui.UiArgs()
+        self.grid_columnconfigure(**args.column_args())
+        self.grid_rowconfigure(**args.row_args())
+        self.frame = ConvertAppFrame(self, service)
+        self.frame.grid(cnf=args.grid_args(sticky=tk.NSEW))

@@ -1,7 +1,7 @@
 from dataclasses import asdict
 from functools import cache
 from pathlib import Path
-from typing import Any, Iterable, List, Mapping, Type
+from typing import Any, Callable, Iterable, List, Mapping, Type
 
 from dynpy.core import context as ctx
 from dynpy.core import reader
@@ -15,7 +15,6 @@ from dynpy.core.models import (
     CodeNode,
     ContentNode,
     ConvertConfig,
-    ConvertHandler,
     NodeInfo,
     NodeView,
     PythonEngine,
@@ -57,7 +56,7 @@ def _create_actions(action_content: Mapping[str, Any]) -> Mapping[ActionType, Li
 def convert_config(path: Path) -> ConvertConfig:
     content = reader.read_json(path.resolve())
     return ConvertConfig(
-        configs=_create_sources(content["configs"]),
+        sources=_create_sources(content["configs"]),
         actions=_create_actions(content["actions"]),
     )
 
@@ -93,7 +92,7 @@ def default_type_ignore_action() -> TypeIgnoreAction:
 
 def default_convert_config() -> ConvertConfig:
     config = ConvertConfig(
-        configs=[
+        sources=[
             SourceConfig(
                 name="<SOURCE_NAME>",
                 source="<SOURCE_PATH>",
@@ -171,23 +170,23 @@ def _info_as_str(info: NodeInfo) -> str:
     return f"{_INFO_PREFIX} {info_str}"
 
 
-def code_to_python(node: ContentNode, handler: ConvertHandler) -> List[str]:
+def code_to_python(node: ContentNode, action_func: Callable[[List[str]], List[str]]) -> List[str]:
     code_lines = node.code.splitlines(keepends=False)
-    code_lines = handler.apply_action(code_lines)
+    code_lines = action_func(code_lines)
     lines = [_info_as_str(node.node_info), "", ""]
     lines.extend(code_lines)
     return lines
 
 
-def code_to_dynamo(lines: List[str], handler: ConvertHandler) -> str:
-    lines = handler.apply_action(lines)
+def code_to_dynamo(lines: List[str], action_func: Callable[[List[str]], List[str]]) -> str:
+    lines = action_func(lines)
     return "\n".join(lines)
 
 
-def python_file(path: Path, handler: ConvertHandler) -> PythonFile:
+def python_file(path: Path, action_func: Callable[[List[str]], List[str]]) -> PythonFile:
     code_lines = reader.read_python(path)
     return PythonFile(
         path=path,
         info=node_info(code_lines[0]),
-        code=code_to_dynamo(code_lines[1:], handler),
+        code=code_to_dynamo(code_lines[1:], action_func),
     )

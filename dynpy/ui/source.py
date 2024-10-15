@@ -1,8 +1,8 @@
 import tkinter as tk
-from tkinter.ttk import Style, Treeview
+from tkinter.ttk import Treeview
 from typing import List, Optional
 
-from dynpy.core.models import ConvertConfig, SourceConfig
+from dynpy.core.models import SourceConfig
 from dynpy.ui.interface import IView
 from dynpy.ui.models.entries import LabelEntry, LabelEntryOptions
 from dynpy.ui.utils import widget as ui
@@ -20,6 +20,13 @@ class SourceViewModel:
         self.source_label = "Source Path"
         self.export_label = "Export Path"
 
+    def get_model(self) -> SourceConfig:
+        return SourceConfig(
+            name=self.name_value.get(),
+            source=self.source_value.get(),
+            export=self.export_value.get(),
+        )
+
     def update_model(self, model: SourceConfig):
         self.model = model
         self.name_value.set(model.name)
@@ -30,30 +37,21 @@ class SourceViewModel:
         return LabelEntryOptions(
             name=self.name_label,
             value=self.name_value,
-            columns=(ui.UiMatrix(0, 0), ui.UiMatrix(1, 1)),
-            rows=(ui.UiMatrix(0, 0),),
             args=args,
-            key_event=None,
         )
 
     def source_options(self, args: ui.UiArgs) -> LabelEntryOptions:
         return LabelEntryOptions(
             name=self.source_label,
             value=self.source_value,
-            columns=(ui.UiMatrix(0, 0), ui.UiMatrix(1, 1)),
-            rows=(ui.UiMatrix(1, 0),),
             args=args,
-            key_event=None,
         )
 
     def export_options(self, args: ui.UiArgs) -> LabelEntryOptions:
         return LabelEntryOptions(
             name=self.export_label,
             value=self.export_value,
-            columns=(ui.UiMatrix(0, 0), ui.UiMatrix(1, 1)),
-            rows=(ui.UiMatrix(2, 0),),
             args=args,
-            key_event=None,
         )
 
 
@@ -63,8 +61,13 @@ class SourceView(tk.Frame, IView[SourceConfig]):
         args = args or ui.UiArgs()
         self.model = SourceViewModel(self)
         self.name = LabelEntry(self, self.model.name_options(args))
+        args.add_row()
         self.source = LabelEntry(self, self.model.source_options(args))
+        args.add_row()
         self.export = LabelEntry(self, self.model.export_options(args))
+
+    def get_model(self) -> SourceConfig:
+        return self.model.get_model()
 
     def update_view(self, model: SourceConfig):
         self.model.update_model(model)
@@ -78,53 +81,44 @@ class SourceView(tk.Frame, IView[SourceConfig]):
         self.grid_remove()
 
 
-def _horizontal_scrollbar(parent: tk.Misc, content: Treeview) -> tk.Scrollbar:
-    horizontal = tk.Scrollbar(
-        parent,
-        orient=tk.HORIZONTAL,
-        command=content.xview,
-    )
-    horizontal.grid(row=1, column=0, sticky=tk.EW)
-    return horizontal
-
-
-def _vertical_scrollbar(parent: tk.Misc, content: Treeview) -> tk.Scrollbar:
-    vertical = tk.Scrollbar(
-        parent,
-        orient=tk.VERTICAL,
-        command=content.yview,  # type: ignore
-    )
-    vertical.grid(row=0, column=1, sticky=tk.NS)
-    return vertical
-
-
 class SourceListView(tk.Frame, IView[List[SourceConfig]]):
     def __init__(self, master: tk.Misc, args: Optional[ui.UiArgs] = None):
         super().__init__(master)
+        # style = Style()
+        # style.configure("Treeview.Heading", font=("Calibri", 10, "bold"))
         args = args or ui.UiArgs()
-        style = Style()
-        style.configure("Treeview.Heading", font=("Calibri", 10, "bold"))
-        self.tbl_tree = Treeview(self, style="Treeview")
         self.view_models: List[SourceViewModel] = []
-        self.grid_columnconfigure(1, weight=1, minsize=350)
-        self.grid_rowconfigure(args.row, weight=1)
-        self._setup_grid(args)
-        self._setup_table()
+        self.tbl_tree = Treeview(self, style="Treeview")
+        self.tbl_tree.grid_columnconfigure(**args.column_args(), minsize=350)
+        self.tbl_tree.grid_rowconfigure(**args.row_args())
+        self._setup_table(args)
+        self.grid(cnf=args.grid_args())
 
-    def _setup_grid(self, args: ui.UiArgs):
-        ui.setup_grid(self, args)
-        self.grid_columnconfigure(0, weight=1)
-        self.grid_rowconfigure(0, weight=1)
-        self.grid(row=0, column=0, sticky=tk.NSEW)
+    def horizontal_scrollbar(self, args: ui.UiArgs) -> tk.Scrollbar:
+        if args.row_index < 1:
+            args.add_row()
+        scroll = tk.Scrollbar(self, orient=tk.HORIZONTAL, command=self.tbl_tree.xview)
+        scroll.grid(cnf=args.grid_args(sticky=tk.EW))
+        return scroll
 
-    def _setup_table(self):
-        scb_vertical = _vertical_scrollbar(self, self.tbl_tree)
-        scb_horizontal = _horizontal_scrollbar(self, self.tbl_tree)
+    def vertical_scrollbar(self, args: ui.UiArgs) -> tk.Scrollbar:
+        if args.column_index < 1:
+            args.add_column()
+        scroll = tk.Scrollbar(self, orient=tk.VERTICAL, command=self.tbl_tree.yview)
+        scroll.grid(cnf=args.grid_args(sticky=tk.NS))
+        return scroll
+
+    def _setup_table(self, args: ui.UiArgs):
+        self.grid_columnconfigure(**args.column_args())
+        self.grid_rowconfigure(**args.row_args())
+        self.tbl_tree.grid(cnf=args.grid_args(sticky=tk.NSEW))
+        v_scroll = self.vertical_scrollbar(args)
+        h_scroll = self.horizontal_scrollbar(args)
         self.tbl_tree.configure(
             selectmode=tk.BROWSE,
             show="headings",
-            yscrollcommand=scb_vertical.set,
-            xscrollcommand=scb_horizontal.set,
+            yscrollcommand=v_scroll.set,
+            xscrollcommand=h_scroll.set,
         )
 
     def _get_name(self, option: LabelEntryOptions) -> str:
@@ -162,6 +156,9 @@ class SourceListView(tk.Frame, IView[List[SourceConfig]]):
             values = [model.name, model.source, model.export]
             self.tbl_tree.insert("", "end", values=values)
 
+    def get_model(self) -> List[SourceConfig]:
+        return [mdl.get_model() for mdl in self.view_models]
+
     def update_view(self, model: List[SourceConfig]):
         self.view_models = [SourceViewModel(self, mdl) for mdl in model]
         self._remove_all_rows()
@@ -174,36 +171,4 @@ class SourceListView(tk.Frame, IView[List[SourceConfig]]):
         self.grid()
 
     def hide(self):
-        self.grid_remove()
-
-
-class ConvertConfigFrame(tk.Frame, IView[ConvertConfig]):
-    def __init__(self, master: tk.Misc, args: Optional[ui.UiArgs] = None):
-        super().__init__(master)
-        args = args or ui.UiArgs()
-        self.grid_columnconfigure(args.column, weight=1)
-        self.grid_rowconfigure(args.row, weight=1)
-        self.list_view = SourceListView(self)
-        self.list_view.grid(cnf=args.grid_args())
-        args.add_row()
-        self.grid_columnconfigure(args.column, weight=1)
-        self.grid_rowconfigure(args.row, weight=1)
-        self.model_view = SourceView(self, args)
-        self.model_view.grid(cnf=args.grid_args())
-        self.model_view.hide()
-
-    def update_view(self, model: ConvertConfig):
-        self.list_view.update_view(model.configs)
-
-    def show(self, model: Optional[ConvertConfig] = None):
-        if model is not None:
-            self.update_view(model)
-        self.grid()
-
-    def _hide_views(self):
-        self.list_view.hide()
-        self.model_view.hide()
-
-    def hide(self):
-        self._hide_views()
         self.grid_remove()

@@ -1,10 +1,17 @@
-#!/usr/bin/env python3
-
 import tkinter as tk
 from dataclasses import asdict, dataclass, field
 from tkinter import ttk
 from tkinter.constants import EW, GROOVE, NSEW, W
-from typing import Any, Callable, Dict, Optional, Self, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    NotRequired,
+    Optional,
+    TypedDict,
+    Union,
+    Unpack,
+)
 
 UiElement = Union[tk.Button, tk.Label, tk.Entry]
 UiWidget = Union[UiElement, tk.Frame, tk.LabelFrame, ttk.Treeview]
@@ -12,6 +19,14 @@ UiWidget = Union[UiElement, tk.Frame, tk.LabelFrame, ttk.Treeview]
 
 @dataclass
 class UiPadding:
+    @classmethod
+    def args_from_dict(cls, ui_args: Dict[str, Any]) -> Dict[str, Any]:
+        return {attr: ui_args.pop(attr) for attr in cls.__annotations__}
+
+    @classmethod
+    def from_dict(cls, ui_args: Dict[str, Any]) -> "UiPadding":
+        return UiPadding(**cls.args_from_dict(ui_args))
+
     padx: int = 2
     pady: int = 2
     ipadx: int = 2
@@ -25,61 +40,94 @@ class UiPadding:
         return asdict(self)
 
 
-@dataclass
-class UiMatrix:
-    index: int
-    weight: int = 1
+class GridArgs(TypedDict):
+    row: NotRequired[int]
+    column: NotRequired[int]
+    columnspan: NotRequired[int]
+    sticky: NotRequired[str]
+    padx: NotRequired[int]
+    pady: NotRequired[int]
+    ipadx: NotRequired[int]
+    ipady: NotRequired[int]
 
-    def as_tuple(self) -> Tuple[int, int]:
-        return self.index, self.weight
 
-    def as_dict(self) -> Dict[str, int]:
-        return asdict(self)
-
-    def __iter__(self):
-        return iter(self.as_tuple())
+class ConfigArgs(TypedDict):
+    index: NotRequired[int]
+    weight: NotRequired[int]
 
 
 @dataclass
 class UiArgs:
-    row: int = 0
-    column: int = 0
+    @classmethod
+    def from_dict(cls, args: Dict[str, Any]) -> "UiArgs":
+        if 'padding' not in args:
+            args['padding'] = UiPadding.from_dict(args)
+        return UiArgs(**args)
+
+    row_index: int = 0
+    row_weight: int = 1
+    column_index: int = 0
+    column_weight: int = 1
     columnspan: int = 1
     sticky: str = EW
     padding: UiPadding = field(default_factory=UiPadding)
     west_min: int = 140
     east_min: int = 150
 
-    def add_row(self):
-        self.column = 0
-        self.row += 1
+    def add_row(self, weight: int = 1):
+        self.column_index = 0
+        self.column_weight = 1
+        self.row_index += 1
+        self.row_weight = weight
 
-    def add_column(self):
-        self.column += 1
+    def add_column(self, weight: int = 1):
+        self.column_weight = weight
+        self.column_index += 1
 
-    def as_dict(self) -> Dict[str, Any]:
+    def as_dict(self, *args: str) -> Dict[str, Any]:
         attr_dict = asdict(self)
         attr_dict.pop('padding')
         attr_dict.update(self.padding.as_dict())
-        return attr_dict
+        if len(args) == 0:
+            return attr_dict
+        return {key: attr_dict[key] for key in args}
 
-    def to_dict(self, *args: str, **kwargs) -> Dict[str, Any]:
-        attr_dict = self.as_dict()
-        attr_dict = {key: attr_dict[key] for key in args}
+    def to_dict(self, *args: str, **kwargs: Unpack[GridArgs]) -> Dict[str, Any]:
+        attr_dict = self.as_dict(*args)
         attr_dict.update(kwargs)
         return attr_dict
 
-    def grid_args(self, **kwargs) -> Dict[str, Any]:
-        grid_args = self.as_dict()
-        for key in ('padx_e', 'west_min', 'east_min'):
-            if key not in grid_args:
-                continue
-            grid_args.pop(key)
-        grid_args.update(kwargs)
-        return grid_args
+    def _clean_grid_args(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        for key in ('padx_e', 'west_min', 'east_min', 'row_weight', 'column_weight'):
+            args.pop(key, None)
+        return {key.removesuffix("_index"): value for key, value in args.items()}
 
-    def create(self, *, column: int = 0, row: int = 0, sticky: str = EW, **kwargs) -> "UiArgs":
-        return UiArgs(**self.to_dict(column=column, row=row, sticky=sticky, **kwargs))
+    def grid_args(self, **kwargs: Unpack[GridArgs]) -> Dict[str, Any]:
+        args = self.as_dict()
+        args = self._clean_grid_args(args)
+        args.update(kwargs)
+        return args
+
+    def _get_config_args(self, name: str, **kwargs: Unpack[ConfigArgs]) -> ConfigArgs:
+        prefix = f"{name}_"
+        args = self.as_dict(*(f"{prefix}index", f"{prefix}weight"))
+        args = {key.removeprefix(prefix): value for key, value in args.items()}
+        args.update(kwargs)
+        return ConfigArgs(**args)
+
+    def row_args(self, **kwargs: Unpack[ConfigArgs]) -> ConfigArgs:
+        return self._get_config_args("row", **kwargs)
+
+    def column_args(self, **kwargs: Unpack[ConfigArgs]) -> ConfigArgs:
+        return self._get_config_args("column", **kwargs)
+
+    def create(self, **kwargs: Unpack[GridArgs]) -> "UiArgs":
+        args = self.to_dict()
+        args.update(kwargs)
+        args["row_index"] = args.pop("row", 0)
+        args["column_index"] = args.pop("column", 0)
+        args["sticky"] = args.pop("sticky", EW)
+        return UiArgs.from_dict(args)
 
 
 def get_sticky(element: UiWidget) -> str:
@@ -103,27 +151,11 @@ def setup_grid(element: UiWidget, args: UiArgs) -> None:
     Parameters:
     element (UiElement) the ui element
     """
-    names = ["row", "column", "columnspan", "padx", "pady"]
+    names = ["row_index", "column_index", "columnspan", "padx", "pady"]
     if not isinstance(element, (tk.Button, tk.Frame, tk.LabelFrame)):
         names.append("ipady")
     attr_dict = args.to_dict(*names, sticky=get_sticky(element))
     element.grid(cnf=attr_dict)
-
-
-def setup_label(label: tk.Label, text: str | tk.Variable) -> tk.Label:
-    """
-    Configures the label with the default options
-
-    Parameters:
-    label (Label) the label to hide
-    text (str) the text of label if its not empty
-    """
-    label.configure(anchor=W)
-    if isinstance(text, str):
-        label.configure(text=text)
-    elif isinstance(text, tk.Variable):
-        label.configure(textvariable=text)
-    return label
 
 
 def get_okay_button(frame: tk.Frame) -> Optional[tk.Button]:
@@ -139,8 +171,8 @@ def _create_button(
 ) -> tk.Frame:
     button = tk.Button(frame, text=name, command=command)
     button.grid(
-        row=args.row,
-        column=args.column,
+        row=args.row_index,
+        column=args.column_index,
         sticky=args.sticky,
         padx=args.padding.padx,
         pady=args.padding.pady,

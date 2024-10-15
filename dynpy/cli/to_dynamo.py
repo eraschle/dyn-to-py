@@ -1,14 +1,15 @@
 from pathlib import Path
 from typing import Dict, Iterable, List, Mapping
 
-from dynpy.core import factory
 from dynpy.core.context import DynamoFileContext
-from dynpy.core.models import ConvertHandler, PythonFile
+from dynpy.core.models import PythonFile
+from dynpy.service import factory
+from dynpy.service.convert import ConvertHandler
 
 
 def _python_files(handler: ConvertHandler) -> List[PythonFile]:
     source = handler.source
-    return [factory.python_file(path, handler) for path in source.export_files()]
+    return [factory.python_file(path, handler.apply_action) for path in source.export_files()]
 
 
 def _dynamo_file_group(handler: ConvertHandler) -> Mapping[Path, Iterable[PythonFile]]:
