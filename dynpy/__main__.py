@@ -12,7 +12,7 @@ def main():
         app_view = ConvertApp(ConvertService())
         ui.center_on_screen(app_view)
         app_view.mainloop()
-    except Exception as ex:  # pylint: disable=broad-except
+    except Exception as ex:
         logger.exception("Unhandled Exception", exc_info=ex, stack_info=True)
         sys.exit(1)
     else:

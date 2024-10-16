@@ -1,12 +1,17 @@
 import tkinter as tk
 from typing import Iterable, List, Mapping, Optional, Type
 
-from dynpy.core.actions import ActionType, ConvertAction, RemoveLineAction, TypeIgnoreAction
+from dynpy.core.actions import (
+    ActionType,
+    ConvertAction,
+    RemoveLineAction,
+    TypeIgnoreAction,
+)
 from dynpy.service import factory
-from dynpy.ui.interface import IView
 from dynpy.ui.models.entries import LabelEntry, LabelEntryOptions
+from dynpy.ui.models.views import IView
 from dynpy.ui.utils import widget as ui
-from dynpy.ui.utils.editable import EditableListboxFrame
+from dynpy.ui.widget.editable import EditableListboxFrame
 
 
 def _editable_listbox_frame(master: tk.Misc, text: str, args: ui.UiArgs) -> EditableListboxFrame:

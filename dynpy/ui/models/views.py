@@ -1,8 +1,5 @@
-from typing import List, Mapping, Optional, Protocol, TypeVar
+from typing import Optional, Protocol, TypeVar
 
-from dynpy.core.actions import ActionType, ConvertAction
-from dynpy.core.models import ConvertConfig, SourceConfig
-from dynpy.service.convert import ConvertHandler
 
 TModel = TypeVar("TModel")
 
@@ -45,26 +42,3 @@ class IView(Protocol[TModel]):
     def hide(self) -> None:
         """Hide the view"""
         ...
-
-
-class IConvertService(Protocol):
-    @property
-    def convert_config(self) -> ConvertConfig: ...
-
-    @property
-    def actions(self) -> Mapping[ActionType, List[ConvertAction]]: ...
-
-    @property
-    def source_configs(self) -> List[SourceConfig]: ...
-
-    @property
-    def current_source(self) -> SourceConfig: ...
-
-    @property
-    def handler(self) -> ConvertHandler: ...
-
-    def source_by(self, source_name: str) -> SourceConfig: ...
-
-    def add_source(self, source: SourceConfig) -> None: ...
-
-    def update_source(self, source: SourceConfig) -> None: ...

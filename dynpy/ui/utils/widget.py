@@ -1,7 +1,6 @@
 import tkinter as tk
 from dataclasses import asdict, dataclass, field
 from tkinter import ttk
-from tkinter.constants import EW, GROOVE, NSEW, W
 from typing import (
     Any,
     Callable,
@@ -69,7 +68,7 @@ class UiArgs:
     column_index: int = 0
     column_weight: int = 1
     columnspan: int = 1
-    sticky: str = EW
+    sticky: str = tk.EW
     padding: UiPadding = field(default_factory=UiPadding)
     west_min: int = 140
     east_min: int = 150
@@ -126,7 +125,7 @@ class UiArgs:
         args.update(kwargs)
         args["row_index"] = args.pop("row", 0)
         args["column_index"] = args.pop("column", 0)
-        args["sticky"] = args.pop("sticky", EW)
+        args["sticky"] = args.pop("sticky", tk.EW)
         return UiArgs.from_dict(args)
 
 
@@ -138,10 +137,10 @@ def get_sticky(element: UiWidget) -> str:
     element (UiElement) the ui element
     """
     if isinstance(element, (tk.Frame, tk.LabelFrame)) or (
-        isinstance(element, tk.Label) and element['relief'] == GROOVE
+        isinstance(element, tk.Label) and element['relief'] == tk.GROOVE
     ):
-        return NSEW
-    return EW
+        return tk.NSEW
+    return tk.EW
 
 
 def setup_grid(element: UiWidget, args: UiArgs) -> None:
@@ -199,7 +198,7 @@ def get_button_frame(
     frame.grid_columnconfigure(0, weight=1)
     frame.grid_columnconfigure(1, minsize=args.east_min)
     frame.grid_columnconfigure(2, minsize=args.west_min)
-    args.sticky = EW
+    args.sticky = tk.EW
     if cancel_cmd is not None:
         btn_cancel = create_cancel_button(frame, args, cancel_cmd)
         add_okay_cancel_key_event(btn_cancel, okay_cmd, cancel_cmd)

@@ -112,7 +112,7 @@ class EditableListboxFrame(tk.Frame):
         self.buttons = self._add_buttons(args)
         args.add_row()
         self.grid_rowconfigure(**args.row_args())
-        args.columnspan = len(self.buttons)
+        args.columnspan = len(self.buttons) + 1
         self.editable.grid(cnf=args.grid_args(sticky=tk.NSEW))
 
     def update_values(self, models: Iterable[str]):
@@ -137,8 +137,10 @@ class EditableListboxFrame(tk.Frame):
         for name, command in self._get_buttons_args():
             if len(buttons) > 0:
                 args.add_column()
-            self.grid_columnconfigure(**args.column_args())
+            self.grid_columnconfigure(**args.column_args(weight=0), minsize=args.east_min)
             button = tk.Button(master=self, text=name, command=command)
             button.grid(cnf=args.grid_args())
             buttons.append(button)
+        args.add_column()
+        self.grid_columnconfigure(**args.column_args(weight=1))
         return buttons

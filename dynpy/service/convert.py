@@ -1,11 +1,14 @@
 from dataclasses import dataclass
 from enum import Enum
+import logging
 from pathlib import Path
 from typing import Callable, List, Mapping
 
 from dynpy.core.actions import ActionType, ConvertAction
 from dynpy.core.models import ConvertConfig, SourceConfig
 from dynpy.service import factory
+
+log = logging.getLogger(__name__)
 
 
 class Direction(str, Enum):
@@ -74,15 +77,26 @@ class ConvertService:
     def convert_config(self) -> ConvertConfig:
         return self.handler.convert
 
-    def load(self, file_path: str) -> None:
-        path = Path(file_path)
-        if not path.exists():
-            raise FileNotFoundError(f"Config file not found at {path}")
+    @property
+    def config_extension(self) -> str:
+        return "dynpy"
+
+    def load_config(self, file_path: Path) -> None:
+        if not file_path.exists():
+            raise FileNotFoundError(f"{file_path} does not exist")
         self._handler = ConvertHandler(
             source_name=None,
-            convert=factory.convert_config(path.resolve()),
+            convert=factory.convert_config(file_path.resolve()),
             direction=Direction.UNKNOWN,
         )
+
+    def create_config(self, directory_path: Path) -> Path:
+        if not directory_path.exists():
+            raise FileNotFoundError(f"{directory_path} does not exist")
+        file_path = directory_path / f"config.{self.config_extension}"
+        config = factory.default_convert_config()
+        config.save(file_path)
+        return file_path
 
     @property
     def config(self) -> ConvertConfig:

@@ -1,0 +1,36 @@
+from pathlib import Path
+from typing import List, Mapping, Protocol
+
+from dynpy.core.actions import ActionType, ConvertAction
+from dynpy.core.models import ConvertConfig, SourceConfig
+from dynpy.service.convert import ConvertHandler
+
+
+class IConvertService(Protocol):
+    @property
+    def config_extension(self) -> str: ...
+
+    @property
+    def convert_config(self) -> ConvertConfig: ...
+
+    @property
+    def actions(self) -> Mapping[ActionType, List[ConvertAction]]: ...
+
+    @property
+    def source_configs(self) -> List[SourceConfig]: ...
+
+    @property
+    def current_source(self) -> SourceConfig: ...
+
+    @property
+    def handler(self) -> ConvertHandler: ...
+
+    def load_config(self, file_path: Path) -> None: ...
+
+    def create_config(self, directory_path: Path) -> Path: ...
+
+    def source_by(self, source_name: str) -> SourceConfig: ...
+
+    def add_source(self, source: SourceConfig) -> None: ...
+
+    def update_source(self, source: SourceConfig) -> None: ...

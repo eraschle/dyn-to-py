@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import List
 
 from dynpy.service.convert import ConvertHandler
-from dynpy.ui.interface import IView
+from dynpy.ui.models.views import IView
 from dynpy.ui.utils import widget as ui
 
 

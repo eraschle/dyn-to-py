@@ -1,11 +1,14 @@
+import logging
 import tkinter as tk
 from tkinter.ttk import Treeview
-from typing import List, Optional
+from typing import Callable, List, Optional, Tuple
 
 from dynpy.core.models import SourceConfig
-from dynpy.ui.interface import IView
 from dynpy.ui.models.entries import LabelEntry, LabelEntryOptions
+from dynpy.ui.models.views import IView
 from dynpy.ui.utils import widget as ui
+
+log = logging.getLogger(__name__)
 
 
 class SourceViewModel:
@@ -19,6 +22,10 @@ class SourceViewModel:
         self.name_label = "Name"
         self.source_label = "Source Path"
         self.export_label = "Export Path"
+
+    @property
+    def tree_id(self) -> str:
+        return self.model.name
 
     def get_model(self) -> SourceConfig:
         return SourceConfig(
@@ -82,49 +89,106 @@ class SourceView(tk.Frame, IView[SourceConfig]):
 
 
 class SourceListView(tk.Frame, IView[List[SourceConfig]]):
-    def __init__(self, master: tk.Misc, args: Optional[ui.UiArgs] = None):
+    # https://stackoverflow.com/questions/18562123/how-to-make-ttk-treeviews-rows-editable
+    def __init__(self, master: tk.Misc):
         super().__init__(master)
         # style = Style()
         # style.configure("Treeview.Heading", font=("Calibri", 10, "bold"))
-        args = args or ui.UiArgs()
+        args = ui.UiArgs(sticky=tk.NSEW)
         self.view_models: List[SourceViewModel] = []
-        self.tbl_tree = Treeview(self, style="Treeview")
-        self.tbl_tree.grid_columnconfigure(**args.column_args(), minsize=350)
-        self.tbl_tree.grid_rowconfigure(**args.row_args())
-        self._setup_table(args)
-        self.grid(cnf=args.grid_args())
+        self.grid_rowconfigure(**args.row_args(weight=0))
+        self._add_buttons(args)
+        args.add_row()
+        self.grid_rowconfigure(**args.row_args(weight=1))
+        self.tbl_tree = self._setup_table(args)
 
-    def horizontal_scrollbar(self, args: ui.UiArgs) -> tk.Scrollbar:
+    def _get_buttons_args(self) -> List[Tuple[str, Callable[[], None]]]:
+        return [
+            ("Add", lambda: self.create_source()),
+            ("Edit", lambda: self.edit_selected()),
+            ("Remove", lambda: self.delete_selected()),
+        ]
+
+    def _add_buttons(self, args: ui.UiArgs) -> None:
+        frm_buttons = tk.Frame(self)
+        frm_buttons.grid(cnf=args.grid_args(sticky=tk.NSEW))
+        btn_args = args.create()
+        frm_buttons.grid_rowconfigure(**btn_args.row_args(weight=0))
+        for idx, name_n_command in enumerate(self._get_buttons_args()):
+            name, command = name_n_command
+            button = tk.Button(master=frm_buttons, text=name, command=command)
+            if idx > 0:
+                btn_args.add_column()
+            frm_buttons.grid_columnconfigure(**btn_args.column_args(weight=0))
+            button.grid(cnf=btn_args.grid_args())
+        btn_args.add_column()
+        frm_buttons.grid_columnconfigure(**btn_args.column_args(weight=1))
+
+    def horizontal_scrollbar(
+        self, frame: tk.Frame, table: Treeview, args: ui.UiArgs
+    ) -> tk.Scrollbar:
         if args.row_index < 1:
             args.add_row()
-        scroll = tk.Scrollbar(self, orient=tk.HORIZONTAL, command=self.tbl_tree.xview)
+        scroll = tk.Scrollbar(frame, orient=tk.HORIZONTAL, command=table.xview)
         scroll.grid(cnf=args.grid_args(sticky=tk.EW))
         return scroll
 
-    def vertical_scrollbar(self, args: ui.UiArgs) -> tk.Scrollbar:
+    def vertical_scrollbar(self, frame: tk.Frame, table: Treeview, args: ui.UiArgs) -> tk.Scrollbar:
         if args.column_index < 1:
             args.add_column()
-        scroll = tk.Scrollbar(self, orient=tk.VERTICAL, command=self.tbl_tree.yview)
+        scroll = tk.Scrollbar(frame, orient=tk.VERTICAL, command=table.yview)
         scroll.grid(cnf=args.grid_args(sticky=tk.NS))
         return scroll
 
-    def _setup_table(self, args: ui.UiArgs):
-        self.grid_columnconfigure(**args.column_args())
-        self.grid_rowconfigure(**args.row_args())
-        self.tbl_tree.grid(cnf=args.grid_args(sticky=tk.NSEW))
-        v_scroll = self.vertical_scrollbar(args)
-        h_scroll = self.horizontal_scrollbar(args)
-        self.tbl_tree.configure(
+    def _setup_table(self, args: ui.UiArgs) -> Treeview:
+        frame = tk.Frame(self)
+        frame.grid(cnf=args.grid_args())
+
+        tbl_args = args.create()
+        frame.grid_columnconfigure(**tbl_args.column_args())
+        frame.grid_rowconfigure(**tbl_args.row_args())
+        table = Treeview(frame, style="Treeview")
+        table.grid(cnf=tbl_args.grid_args(sticky=tk.NSEW))
+        v_scroll = self.vertical_scrollbar(frame, table, tbl_args)
+        h_scroll = self.horizontal_scrollbar(frame, table, tbl_args)
+        table.configure(
             selectmode=tk.BROWSE,
             show="headings",
             yscrollcommand=v_scroll.set,
             xscrollcommand=h_scroll.set,
         )
+        return table
 
-    def _get_name(self, option: LabelEntryOptions) -> str:
-        if isinstance(option.name, str):
-            return option.name
-        return option.name.get()
+    def _model_by(self, tree_id: str) -> SourceViewModel:
+        for view_model in self.view_models:
+            if view_model.tree_id != tree_id:
+                continue
+            return view_model
+        raise ValueError(f"Model not found: {tree_id}")
+
+    def _get_selected_model(self) -> Optional[SourceViewModel]:
+        selected_ids = self.tbl_tree.selection()
+        if len(selected_ids) == 0:
+            return None
+        tree_id = selected_ids[0]
+        return self._model_by(tree_id)
+
+    def create_source(self) -> None:
+        pass
+
+    def edit_selected(self) -> None:
+        model = self._get_selected_model()
+        if model is None:
+            return
+        pass
+
+    def delete_selected(self) -> None:
+        view_model = self._get_selected_model()
+        if view_model is None:
+            return
+        self.view_models.remove(view_model)
+        self.tbl_tree.delete(view_model.model.name)
+        # self._update_tree()
 
     def _column_names(self) -> List[str]:
         model = SourceViewModel(self)
@@ -137,7 +201,7 @@ class SourceListView(tk.Frame, IView[List[SourceConfig]]):
             col_index = f"#{idx}"
             self.tbl_tree.column(
                 col_index,
-                anchor=tk.E,
+                anchor=tk.W,
                 stretch=True,
             )
             self.tbl_tree.heading(
@@ -151,19 +215,22 @@ class SourceListView(tk.Frame, IView[List[SourceConfig]]):
             self.tbl_tree.delete(row)
 
     def _update_sources(self):
-        for view in self.view_models:
-            model = view.model
+        for view_model in self.view_models:
+            model = view_model.model
             values = [model.name, model.source, model.export]
-            self.tbl_tree.insert("", "end", values=values)
+            self.tbl_tree.insert("", "end", id=view_model.tree_id, values=values)
 
     def get_model(self) -> List[SourceConfig]:
         return [mdl.get_model() for mdl in self.view_models]
 
-    def update_view(self, model: List[SourceConfig]):
-        self.view_models = [SourceViewModel(self, mdl) for mdl in model]
+    def _update_tree(self):
         self._remove_all_rows()
         self._add_columns()
         self._update_sources()
+
+    def update_view(self, model: List[SourceConfig]):
+        self.view_models = [SourceViewModel(self, mdl) for mdl in model]
+        self._update_tree()
 
     def show(self, model: Optional[List[SourceConfig]] = None):
         if model is not None:
