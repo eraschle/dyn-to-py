@@ -3,7 +3,7 @@ import sys
 from dynpy import logger as log
 from dynpy.service.convert import ConvertService
 from dynpy.ui.app import ConvertApp
-from dynpy.ui.utils import widget as ui
+from dynpy.ui import utils as ui
 
 
 def main():

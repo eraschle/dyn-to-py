@@ -1,20 +1,15 @@
 import tkinter as tk
 from typing import Iterable, List, Mapping, Optional, Type
 
-from dynpy.core.actions import (
-    ActionType,
-    ConvertAction,
-    RemoveLineAction,
-    TypeIgnoreAction,
-)
+from dynpy.core.actions import ActionType, ConvertAction, RemoveLineAction, TypeIgnoreAction
 from dynpy.service import factory
-from dynpy.ui.models.entries import LabelEntry, LabelEntryOptions
+from dynpy.ui.models.uiargs import UiArgs
 from dynpy.ui.models.views import IView
-from dynpy.ui.utils import widget as ui
 from dynpy.ui.widget.editable import EditableListboxFrame
+from dynpy.ui.widget.entries import LabelEntry, LabelEntryOptions
 
 
-def _editable_listbox_frame(master: tk.Misc, text: str, args: ui.UiArgs) -> EditableListboxFrame:
+def _editable_listbox_frame(master: tk.Misc, text: str, args: UiArgs) -> EditableListboxFrame:
     frm_label = tk.LabelFrame(master=master, text=text)
     frm_label.grid(cnf=args.grid_args(sticky=tk.NSEW))
     edit_args = args.create(row=0, column=0, sticky=tk.NSEW)
@@ -28,7 +23,7 @@ def _editable_listbox_frame(master: tk.Misc, text: str, args: ui.UiArgs) -> Edit
 class RemoveActionLabelFrame(tk.LabelFrame, IView[RemoveLineAction]):
     def __init__(self, master: tk.Misc, text: str):
         super().__init__(master=master, text=text)
-        args = ui.UiArgs(sticky=tk.NSEW)
+        args = UiArgs(sticky=tk.NSEW)
         self.action = factory.default_remove_action()
         self.grid_rowconfigure(**args.row_args())
         self.grid_columnconfigure(**args.column_args())
@@ -54,7 +49,7 @@ class RemoveActionLabelFrame(tk.LabelFrame, IView[RemoveLineAction]):
 class ReplaceActionLabelFrame(tk.LabelFrame, IView[TypeIgnoreAction]):
     def __init__(self, master: tk.Misc, text: str):
         super().__init__(master=master, text=text)
-        args = ui.UiArgs()
+        args = UiArgs()
         self.action = factory.default_type_ignore_action()
         self.grid_rowconfigure(**args.row_args(weight=0))
         self.grid_columnconfigure(**args.column_args())
@@ -66,7 +61,7 @@ class ReplaceActionLabelFrame(tk.LabelFrame, IView[TypeIgnoreAction]):
         self.grid_columnconfigure(**args.column_args())
         self.edt_contain = _editable_listbox_frame(self, "Contains", args)
 
-    def _add_replace_value(self, args: ui.UiArgs) -> LabelEntry:
+    def _add_replace_value(self, args: UiArgs) -> LabelEntry:
         frame = tk.Frame(self)
         frame.grid(cnf=args.grid_args(columnspan=2, sticky=tk.EW))
         value_var = tk.StringVar(frame, self.action.value)
@@ -102,7 +97,7 @@ class ReplaceActionLabelFrame(tk.LabelFrame, IView[TypeIgnoreAction]):
 class ConvertActionView(tk.Frame, IView[Mapping[ActionType, List[ConvertAction]]]):
     def __init__(self, master: tk.Misc):
         super().__init__(master)
-        args = ui.UiArgs(sticky=tk.NSEW)
+        args = UiArgs(sticky=tk.NSEW)
         config = factory.default_convert_config()
         self.actions = config.actions
         self.grid_rowconfigure(**args.row_args())

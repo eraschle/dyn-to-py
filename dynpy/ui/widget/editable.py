@@ -1,7 +1,7 @@
 import tkinter as tk
 from typing import Callable, Iterable, List, Literal, Tuple
 
-from dynpy.ui.utils import widget as ui
+from dynpy.ui.models.uiargs import UiArgs
 
 
 class EditableListbox(tk.Listbox):
@@ -103,7 +103,7 @@ class EditableListbox(tk.Listbox):
 class EditableListboxFrame(tk.Frame):
     def __init__(self, master: tk.Misc):
         super().__init__(master=master)
-        args = ui.UiArgs()
+        args = UiArgs()
         self.grid_rowconfigure(**args.row_args(weight=0))
         self.grid_columnconfigure(**args.column_args())
         self.editable = EditableListbox(self)
@@ -132,7 +132,7 @@ class EditableListboxFrame(tk.Frame):
             ("Remove", lambda: self.editable.delete_selected()),
         ]
 
-    def _add_buttons(self, args: ui.UiArgs) -> List[tk.Button]:
+    def _add_buttons(self, args: UiArgs) -> List[tk.Button]:
         buttons = []
         for name, command in self._get_buttons_args():
             if len(buttons) > 0:

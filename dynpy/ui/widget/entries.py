@@ -4,7 +4,7 @@ from pathlib import Path
 from tkinter import filedialog
 from typing import Any, Callable, Optional
 
-from dynpy.ui.utils import widget as ui
+from dynpy.ui.models.uiargs import UiArgs
 
 
 @dataclass(kw_only=True)
@@ -12,7 +12,7 @@ class LabelEntryOptions:
     name: str
     value: Any
     validate: Callable[[], bool]
-    args: ui.UiArgs
+    args: UiArgs
     invalidate: Optional[Callable[[], None]] = None
 
     def label_name(self, parent: tk.Misc) -> tk.StringVar:

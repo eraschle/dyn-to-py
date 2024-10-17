@@ -1,13 +1,13 @@
 import logging
-from pathlib import Path
 import tkinter as tk
+from pathlib import Path
 from tkinter import messagebox as msg
 from typing import Callable, List, Optional, cast
 
 from dynpy.core.models import SourceConfig
-from dynpy.ui.models.entries import LabelEntry, LabelEntryOptions, LabelPathEntry
+from dynpy.ui.models.uiargs import UiArgs
 from dynpy.ui.models.views import IView
-from dynpy.ui.utils import widget as ui
+from dynpy.ui.widget.entries import LabelEntry, LabelEntryOptions, LabelPathEntry
 
 log = logging.getLogger(__name__)
 
@@ -80,7 +80,7 @@ class SourceViewModel:
         self.source_value.set(model.source)
         self.export_value.set(model.export)
 
-    def name_options(self, args: ui.UiArgs) -> LabelEntryOptions:
+    def name_options(self, args: UiArgs) -> LabelEntryOptions:
         return LabelEntryOptions(
             name=self.name_label,
             value=self.name_value,
@@ -88,7 +88,7 @@ class SourceViewModel:
             args=args,
         )
 
-    def source_options(self, args: ui.UiArgs) -> LabelEntryOptions:
+    def source_options(self, args: UiArgs) -> LabelEntryOptions:
         return LabelEntryOptions(
             name=self.source_label,
             value=self.source_value,
@@ -96,7 +96,7 @@ class SourceViewModel:
             args=args,
         )
 
-    def export_options(self, args: ui.UiArgs) -> LabelEntryOptions:
+    def export_options(self, args: UiArgs) -> LabelEntryOptions:
         return LabelEntryOptions(
             name=self.export_label,
             value=self.export_value,
@@ -108,7 +108,7 @@ class SourceViewModel:
 class SourceView(tk.Frame, IView[SourceConfig]):
     def __init__(self, master: "SourceListView"):
         super().__init__(master)
-        args = ui.UiArgs(sticky=tk.NSEW)
+        args = UiArgs(sticky=tk.NSEW)
         self.grid_rowconfigure(**args.row_args(weight=0))
         self.grid_columnconfigure(**args.column_args())
         self.frm_buttons = tk.Frame(self)
@@ -199,7 +199,7 @@ class SourceView(tk.Frame, IView[SourceConfig]):
 class SourceListView(tk.Frame, IView[List[SourceConfig]]):
     def __init__(self, master: tk.Misc):
         super().__init__(master)
-        args = ui.UiArgs(sticky=tk.NSEW)
+        args = UiArgs(sticky=tk.NSEW)
         self.models: List[SourceConfig] = []
         self.current_idx: Optional[int] = None
         self.grid_rowconfigure(**args.row_args(weight=0))
@@ -210,7 +210,7 @@ class SourceListView(tk.Frame, IView[List[SourceConfig]]):
         self.viw_model = SourceView(self)
         self.viw_model.grid(cnf=args.grid_args(sticky=tk.NSEW))
 
-    def _create_listbox(self, args: ui.UiArgs) -> tk.Listbox:
+    def _create_listbox(self, args: UiArgs) -> tk.Listbox:
         frame = tk.LabelFrame(self, text="Source configurations")
         frame.grid(cnf=args.grid_args())
 

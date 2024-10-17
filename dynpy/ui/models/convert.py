@@ -3,21 +3,21 @@ from pathlib import Path
 from typing import List
 
 from dynpy.service.convert import ConvertHandler
+from dynpy.ui.models.uiargs import UiArgs
 from dynpy.ui.models.views import IView
-from dynpy.ui.utils import widget as ui
 
 
 class SourceFileListBox(tk.LabelFrame):
     def __init__(self, master: tk.Misc, text: str):
         super().__init__(master=master, text=text)
-        args = ui.UiArgs()
+        args = UiArgs()
         self.files: List[Path] = []
         self.grid_rowconfigure(**args.row_args())
         self.grid_columnconfigure(**args.column_args())
         self.lst_files = tk.Listbox(self)
         self.add_file_lists(args)
 
-    def add_file_lists(self, args: ui.UiArgs):
+    def add_file_lists(self, args: UiArgs):
         args = args.create(row=0, column=0, sticky=tk.NSEW)
         self.lst_files.grid_rowconfigure(**args.row_args())
         self.lst_files.grid_columnconfigure(**args.column_args())
@@ -39,7 +39,7 @@ class SourceFileListBox(tk.LabelFrame):
 class ConvertionView(tk.Frame, IView[ConvertHandler]):
     def __init__(self, master: tk.Misc):
         super().__init__(master)
-        args = ui.UiArgs()
+        args = UiArgs()
         self.grid_rowconfigure(**args.row_args())
         self.grid_columnconfigure(**args.column_args())
 

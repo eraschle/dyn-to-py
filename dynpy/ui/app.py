@@ -7,11 +7,11 @@ from tkinter.ttk import Notebook
 from typing import Callable, Optional
 
 from dynpy.service import IConvertService
-from dynpy.ui import ressources as res
-from dynpy.ui.action import ConvertActionView
-from dynpy.ui.convert import ConvertionView
-from dynpy.ui.source import SourceListView
-from dynpy.ui.utils import widget as ui
+from dynpy import ressources as res
+from dynpy.ui.models.action import ConvertActionView
+from dynpy.ui.models.convert import ConvertionView
+from dynpy.ui.models.source import SourceListView
+from dynpy.ui.models.uiargs import UiArgs
 
 
 def ask_config_folder() -> Path:
@@ -35,7 +35,7 @@ def ask_config_file(service: IConvertService) -> Path:
 class ConvertLoadFrame(tk.Frame):
     def __init__(self, master: tk.Misc):
         super().__init__(master)
-        args = ui.UiArgs(sticky=tk.NSEW)
+        args = UiArgs(sticky=tk.NSEW)
         self.grid_columnconfigure(**args.column_args(weight=1))
         self.grid_rowconfigure(**args.row_args(weight=1))
         args.add_row()
@@ -43,7 +43,7 @@ class ConvertLoadFrame(tk.Frame):
         args.add_row()
         self.grid_rowconfigure(**args.row_args(weight=1))
 
-    def _add_button_row(self, args: ui.UiArgs, minsize: int = 200):
+    def _add_button_row(self, args: UiArgs, minsize: int = 200):
         self.grid_rowconfigure(**args.row_args(weight=0), minsize=minsize)
         args.add_column()
         self.grid_columnconfigure(**args.column_args(weight=0), minsize=minsize)
@@ -60,7 +60,7 @@ class ConvertLoadFrame(tk.Frame):
             return None
         return tk.PhotoImage(file=path)
 
-    def _add_button(self, image: Optional[tk.PhotoImage], args: ui.UiArgs) -> tk.Button:
+    def _add_button(self, image: Optional[tk.PhotoImage], args: UiArgs) -> tk.Button:
         if image is None:
             button = tk.Button(self, compound=tk.TOP)
         else:
@@ -68,11 +68,11 @@ class ConvertLoadFrame(tk.Frame):
         button.grid(cnf=args.grid_args(sticky=tk.NSEW))
         return button
 
-    def _add_create_button(self, args: ui.UiArgs) -> None:
+    def _add_create_button(self, args: UiArgs) -> None:
         self.create_image = self._button_image(res.DynPyResource.ICON_CREATE)
         self.create_config = self._add_button(self.create_image, args)
 
-    def _add_load_button(self, args: ui.UiArgs) -> None:
+    def _add_load_button(self, args: UiArgs) -> None:
         self.load_image = self._button_image(res.DynPyResource.ICON_LOAD)
         self.load_config = self._add_button(self.load_image, args)
 
@@ -86,7 +86,7 @@ class ConvertLoadFrame(tk.Frame):
 class ConvertAppFrame(tk.Frame):
     def __init__(self, master: tk.Misc):
         super().__init__(master)
-        args = ui.UiArgs(sticky=tk.NSEW)
+        args = UiArgs(sticky=tk.NSEW)
         self.grid_columnconfigure(**args.column_args())
         self.grid_rowconfigure(**args.row_args())
         args = args.create()
@@ -120,7 +120,7 @@ class ConvertApp(tk.Tk):
     def __init__(self, service: IConvertService) -> None:
         super().__init__()
         self.service = service
-        args = ui.UiArgs(sticky=tk.NSEW)
+        args = UiArgs(sticky=tk.NSEW)
         self.grid_columnconfigure(**args.column_args())
         self.grid_rowconfigure(**args.row_args())
         self.frm_app = ConvertAppFrame(self)
@@ -151,7 +151,7 @@ class ConvertApp(tk.Tk):
 
     def _switch_frame(self):
         self.frm_load.grid_forget()
-        args = ui.UiArgs(sticky=tk.NSEW)
+        args = UiArgs(sticky=tk.NSEW)
         self.frm_app.update_views(self.service)
         self.frm_app.grid(cnf=args.grid_args())
 
