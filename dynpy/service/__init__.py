@@ -3,7 +3,7 @@ from typing import List, Mapping, Protocol
 
 from dynpy.core.actions import ActionType, ConvertAction
 from dynpy.core.models import ConvertConfig, SourceConfig
-from dynpy.service.convert import ConvertHandler
+from dynpy.core.convert import ConvertHandler
 
 
 class IConvertService(Protocol):

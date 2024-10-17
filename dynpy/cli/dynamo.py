@@ -2,15 +2,10 @@ import os
 from pathlib import Path
 from typing import List, Sequence
 
-from dynpy.core import reader
+from dynpy.core import factory, reader
 from dynpy.core.context import DynamoFileContext
-from dynpy.core.models import (
-    CodeNode,
-    ContentNode,
-    SourceConfig,
-)
-from dynpy.service import factory
-from dynpy.service.convert import ConvertHandler
+from dynpy.core.convert import ConvertHandler
+from dynpy.core.models import CodeNode, ContentNode, SourceConfig
 
 
 def _get_code_nodes(context: DynamoFileContext) -> List[CodeNode]:
@@ -46,7 +41,7 @@ def _create_python_files(nodes: Sequence[ContentNode], handler: ConvertHandler):
         _create_py_file(node, handler=handler)
 
 
-def dynamo_to_python(handler: ConvertHandler):
+def to_python(handler: ConvertHandler):
     for dyn_file in handler.source.source_files():
         with DynamoFileContext(dyn_file, save=False) as ctx:
             nodes = _content_nodes(ctx)

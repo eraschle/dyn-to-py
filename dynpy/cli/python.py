@@ -1,10 +1,10 @@
 from pathlib import Path
 from typing import Dict, Iterable, List, Mapping
 
+from dynpy.core import factory
 from dynpy.core.context import DynamoFileContext
+from dynpy.core.convert import ConvertHandler
 from dynpy.core.models import PythonFile
-from dynpy.service import factory
-from dynpy.service.convert import ConvertHandler
 
 
 def _python_files(handler: ConvertHandler) -> List[PythonFile]:
@@ -30,7 +30,7 @@ def replace_code_in(files: Iterable[PythonFile], context: DynamoFileContext) -> 
         context.replace_code(node_id, file.code)
 
 
-def python_to_dynamo(handler: ConvertHandler):
+def to_dynamo(handler: ConvertHandler):
     for path, files in _dynamo_file_group(handler).items():
         with DynamoFileContext(path=path) as ctx:
             replace_code_in(files, ctx)

@@ -142,6 +142,8 @@ class SourceConfig:
 
 @dataclass(frozen=True)
 class ConvertConfig:
+    extension: ClassVar[str] = "dynpy"
+
     sources: List[SourceConfig]
     actions: Mapping[ActionType, List[ConvertAction]] = field(default_factory=dict)
 

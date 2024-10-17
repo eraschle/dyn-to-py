@@ -1,8 +1,8 @@
 import tkinter as tk
 from typing import Iterable, List, Mapping, Optional, Type
 
+from dynpy.core import factory
 from dynpy.core.actions import ActionType, ConvertAction, RemoveLineAction, TypeIgnoreAction
-from dynpy.service import factory
 from dynpy.ui.models.uiargs import UiArgs
 from dynpy.ui.models.views import IView
 from dynpy.ui.widget.editable import EditableListboxFrame

@@ -2,7 +2,7 @@ import tkinter as tk
 from pathlib import Path
 from typing import List
 
-from dynpy.service.convert import ConvertHandler
+from dynpy.core.convert import ConvertHandler
 from dynpy.ui.models.uiargs import UiArgs
 from dynpy.ui.models.views import IView
 
