@@ -69,10 +69,12 @@ class ReplaceActionLabelFrame(tk.LabelFrame, IView[TypeIgnoreAction]):
     def _add_replace_value(self, args: ui.UiArgs) -> LabelEntry:
         frame = tk.Frame(self)
         frame.grid(cnf=args.grid_args(columnspan=2, sticky=tk.EW))
+        value_var = tk.StringVar(frame, self.action.value)
         options = LabelEntryOptions(
             name="Replace Value",
-            value=tk.StringVar(frame, self.action.value),
+            value=value_var,
             args=args.create(sticky=tk.NSEW),
+            validate=lambda: len(value_var.get().strip()) > 0,
         )
         return LabelEntry(frame, options=options)
 

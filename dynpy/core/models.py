@@ -1,15 +1,7 @@
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import (
-    Any,
-    ClassVar,
-    Dict,
-    Iterable,
-    List,
-    Mapping,
-    OrderedDict,
-)
+from typing import Any, ClassVar, Dict, Iterable, List, Mapping, OrderedDict
 
 from dynpy.core import paths as pth
 from dynpy.core import reader

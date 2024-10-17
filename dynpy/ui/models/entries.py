@@ -1,6 +1,8 @@
 import tkinter as tk
 from dataclasses import dataclass
-from typing import Any
+from pathlib import Path
+from tkinter import filedialog
+from typing import Any, Callable, Optional
 
 from dynpy.ui.utils import widget as ui
 
@@ -9,7 +11,9 @@ from dynpy.ui.utils import widget as ui
 class LabelEntryOptions:
     name: str
     value: Any
+    validate: Callable[[], bool]
     args: ui.UiArgs
+    invalidate: Optional[Callable[[], None]] = None
 
     def label_name(self, parent: tk.Misc) -> tk.StringVar:
         return tk.StringVar(master=parent, value=self.name)
@@ -24,7 +28,7 @@ class LabelEntryOptions:
 
 class LabelEntry:
     def __init__(self, parent: tk.Misc, options: LabelEntryOptions):
-        parent.grid_rowconfigure(**options.args.row_args())
+        parent.grid_rowconfigure(**options.args.row_args(weight=0))
         self.label_name = self._add_label(parent, options)
         options.args.add_column()
         self.entry_value = self._add_entry(parent, options)
@@ -58,7 +62,40 @@ class LabelEntry:
 
     def _add_entry(self, parent: tk.Misc, options: LabelEntryOptions) -> tk.StringVar:
         variable = options.entry_value(parent)
-        self._entry = tk.Entry(parent, textvariable=variable)
+        self._entry = tk.Entry(
+            parent,
+            textvariable=variable,
+            validate="all",
+            validatecommand=(parent.register(options.validate), "%P"),
+            # invalidcommand=parent.register(options.invalidate),
+        )
         parent.grid_columnconfigure(**options.args.column_args(weight=1))
-        self._entry.grid(cnf=options.args.grid_args())
+        self._entry.grid(cnf=options.args.grid_args(sticky=tk.EW))
         return variable
+
+
+class LabelPathEntry(LabelEntry):
+    last_path: str = str(Path.home())
+
+    def __init__(self, parent: tk.Misc, options: LabelEntryOptions):
+        super().__init__(parent, options)
+        self._add_button(parent, options)
+
+    def _add_button(self, parent: tk.Misc, options: LabelEntryOptions) -> None:
+        self._button = tk.Button(parent, text="...", command=self._on_button_click)
+        options.args.add_column()
+        parent.grid_columnconfigure(**options.args.column_args(weight=0))
+        self._button.grid(cnf=options.args.grid_args(sticky=tk.EW))
+
+    def _is_path(self, path: Optional[str]) -> bool:
+        return path is not None and path != ""
+
+    def _on_button_click(self):
+        path = self.value
+        if not self._is_path(path):
+            path = self.last_path
+        path = filedialog.askdirectory(initialdir=path, title="Select Directory")
+        if not self._is_path(path):
+            return
+        self.value = path
+        self.last_path = path
