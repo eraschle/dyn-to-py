@@ -69,7 +69,8 @@ class ContentNode:
 
     @property
     def file_name(self) -> str:
-        return f"{self.node_id}_{self.code_engine}_{self.node_name}"
+        version = self.code_engine.value[-1]
+        return f"{self.node_name}_py{version}_{self.node_id}"
 
     @property
     def as_dir(self) -> str:

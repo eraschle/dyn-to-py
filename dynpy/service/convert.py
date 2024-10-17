@@ -5,6 +5,7 @@ from typing import List, Mapping
 from dynpy.core import factory
 from dynpy.core.actions import ActionType, ConvertAction
 from dynpy.core.convert import ConvertHandler, Direction
+from dynpy.core import convert as hdl
 from dynpy.core.models import ConvertConfig, SourceConfig
 
 log = logging.getLogger(__name__)
@@ -50,10 +51,7 @@ class ConvertService:
     def create_config(self, directory_path: Path) -> Path:
         if not directory_path.exists():
             raise FileNotFoundError(f"{directory_path} does not exist")
-        file_path = directory_path / f"config.{self.config_extension}"
-        config = factory.default_convert_config()
-        config.save(file_path)
-        return file_path
+        return hdl.create_config(directory_path)
 
     @property
     def config(self) -> ConvertConfig:

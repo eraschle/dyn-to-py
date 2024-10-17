@@ -1,16 +1,16 @@
-import re
 from pathlib import Path
 from typing import Callable, List
 
 NAME_LOOKUP = [" ", "<", ">", "?", "|", "*", "/", "\\", "\"", ":", ";", ",", "-"]
 NAME_SEPARATOR = "_"
-NAME_REGEX = re.compile(r"\(\[_\]*\)")
 
 
 def clean_name(name: str) -> str:
     for replace in NAME_LOOKUP:
         name = name.replace(replace, NAME_SEPARATOR)
-    names = NAME_REGEX.split(name)
+    names = name.split(NAME_SEPARATOR)
+    names = [name.strip() for name in names if name is not None]
+    names = [name for name in names if len(name) > 0]
     return NAME_SEPARATOR.join(names)
 
 

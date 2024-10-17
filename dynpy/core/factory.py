@@ -1,7 +1,7 @@
 from dataclasses import asdict
 from functools import cache
 from pathlib import Path
-from typing import Any, Callable, Iterable, List, Mapping, Type
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Type
 
 from dynpy.core import context as ctx
 from dynpy.core import reader
@@ -151,6 +151,10 @@ def _info_value(key: str, value: Any) -> Any:
     return PythonEngine(value)
 
 
+def _info_key(key: str) -> str:
+    return key.strip().replace("node-", "")
+
+
 _INFO_PREFIX: str = "# -*-"
 _INFO_SEPARATOR: str = ";"
 
@@ -159,13 +163,21 @@ def node_info(node_info: str) -> NodeInfo:
     node_info = node_info.replace(_INFO_PREFIX, "")
     infos = node_info.split(_INFO_SEPARATOR)
     infos = [value.split(":") for value in infos]
-    info_dict: Mapping[str, Any] = {key.strip(): value.strip() for key, value in infos}
+    info_dict: Mapping[str, Any] = {_info_key(key): value.strip() for key, value in infos}
     info_dict = {key: _info_value(key, value) for key, value in info_dict.items()}
     return NodeInfo(**info_dict)
 
 
+def node_info_to_dict(info: NodeInfo) -> Dict[str, str]:
+    return {
+        "node-uuid": info.uuid,
+        "node-engine": info.engine.value,
+        "node-path": info.path,
+    }
+
+
 def _info_as_str(info: NodeInfo) -> str:
-    infos = [f"{key}: {value}" for key, value in asdict(info).items()]
+    infos = [f"{key}: {value}" for key, value in node_info_to_dict(info).items()]
     info_str = f"{_INFO_SEPARATOR} ".join(infos)
     return f"{_INFO_PREFIX} {info_str}"
 
