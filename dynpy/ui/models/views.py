@@ -1,5 +1,17 @@
-from typing import Optional, Protocol, TypeVar
+import tkinter as tk
+import traceback
+from abc import ABC, abstractmethod
+from pathlib import Path
+from tkinter import filedialog as dialog
+from tkinter import messagebox as msg
+from typing import TYPE_CHECKING, Optional, Protocol, Tuple, TypeVar
 
+from dynpy import ressources as res
+from dynpy.service import IConvertService
+from dynpy.ui.models.uiargs import UiArgs
+
+if TYPE_CHECKING:
+    from dynpy.ui.app import ConvertAppView
 
 TModel = TypeVar("TModel")
 
@@ -15,7 +27,7 @@ class IView(Protocol[TModel]):
         """
         ...
 
-    def update_view(self, model: TModel) -> None:
+    def update_model(self, model: TModel) -> None:
         """Update view with model values
 
         Update the view components with the values from model.
@@ -27,18 +39,79 @@ class IView(Protocol[TModel]):
         """
         ...
 
-    def show(self, model: Optional[TModel] = None) -> None:
+
+class AAppView(ABC, tk.Frame):
+    def __init__(self, master: "ConvertAppView"):
+        super().__init__(master)
+        self.app = master
+        self._init_view()
+
+    @abstractmethod
+    def _init_view(self):
+        pass
+
+    def _load_icon(self, frame: tk.Frame, icon: res.DynPyResource) -> tk.PhotoImage:
+        path = res.icon_path(icon).absolute()
+        if not path.exists():
+            raise FileNotFoundError(f"Icon file not found: {path}")
+        return tk.PhotoImage(master=frame, file=path)
+
+    def _load_config(self, file_path: Path):
+        try:
+            self.app.service.load_config(file_path)
+        except FileNotFoundError:
+            msg.showerror("Error", "Configuration file does not exist.")
+        except Exception:
+            trace = traceback.format_exc()
+            msg.showerror("Error", f"An error occurred while loading config file:\n{trace}")
+
+    def ask_for_path(self) -> Optional[Path]:
+        service = self.app.service
+        file_path = dialog.askopenfilename(
+            defaultextension=f".{service.config_extension}",
+            filetypes=[("DynPy config", f"*.{service.config_extension}")],
+            title="Select a configuration file",
+            initialdir=Path.home(),
+        )
+        if file_path is None or file_path == "":
+            return None
+        return Path(file_path)
+
+    @abstractmethod
+    def _button_command(self):
+        pass
+
+    @abstractmethod
+    def _button_text_and_icon(self) -> Tuple[str, res.DynPyResource]:
+        pass
+
+    def button(self, frame: tk.Frame) -> tk.Button:
+        text, icon = self._button_text_and_icon()
+        self.image = self._load_icon(frame, icon)
+        return tk.Button(
+            frame, text=text, command=self._button_command, image=self.image, compound=tk.TOP
+        )
+
+    @abstractmethod
+    def update_service(self, service: IConvertService) -> None:
+        pass
+
+    @abstractmethod
+    def update_view(self, service: IConvertService) -> None:
+        pass
+
+    def show(self, args: UiArgs) -> None:
         """Show the view
 
         Show the view and update the view with the model values if provided.
 
         Parameters
         ----------
-        model : Optional[TModel]
-            the model to show
+        args : UiArgs
+            The ui arguments for the view
         """
-        ...
+        self.grid(cnf=args.grid_args())
 
     def hide(self) -> None:
         """Hide the view"""
-        ...
+        self.grid_forget()

@@ -33,13 +33,13 @@ class RemoveActionLabelFrame(tk.LabelFrame, IView[RemoveLineAction]):
         self.action.contains = self.edt_values.get_values()
         return self.action
 
-    def update_view(self, model: RemoveLineAction):
+    def update_model(self, model: RemoveLineAction):
         self.action = model
         self.edt_values.update_values(model.contains)
 
     def show(self, model: Optional[RemoveLineAction] = None):
         if model is not None:
-            self.update_view(model)
+            self.update_model(model)
         self.grid()
 
     def hide(self):
@@ -79,19 +79,11 @@ class ReplaceActionLabelFrame(tk.LabelFrame, IView[TypeIgnoreAction]):
         self.action.regex = self.edt_regex.get_values()
         return self.action
 
-    def update_view(self, model: TypeIgnoreAction):
+    def update_model(self, model: TypeIgnoreAction):
         self.action = model
         self.replace.value = model.value
         self.edt_regex.update_values(model.regex)
         self.edt_contain.update_values(model.contains)
-
-    def show(self, model: Optional[TypeIgnoreAction] = None):
-        if model is not None:
-            self.update_view(model)
-        self.grid()
-
-    def hide(self):
-        self.grid_remove()
 
 
 class ConvertActionView(tk.Frame, IView[Mapping[ActionType, List[ConvertAction]]]):
@@ -122,7 +114,7 @@ class ConvertActionView(tk.Frame, IView[Mapping[ActionType, List[ConvertAction]]
         actions = self._replace_actions()
         if len(actions) == 0:
             return
-        self.replace.update_view(actions[0])
+        self.replace.update_model(actions[0])
 
     def _get_replace_actions(self) -> List[ConvertAction]:
         if len(self._replace_actions()) == 0:
@@ -140,7 +132,7 @@ class ConvertActionView(tk.Frame, IView[Mapping[ActionType, List[ConvertAction]]
         if len(actions) == 0:
             self.remove.hide()
         else:
-            self.remove.update_view(actions[0])
+            self.remove.update_model(actions[0])
 
     def _get_remove_actions(self) -> List[ConvertAction]:
         if len(self._remove_actions()) == 0:
@@ -153,15 +145,7 @@ class ConvertActionView(tk.Frame, IView[Mapping[ActionType, List[ConvertAction]]
             ActionType.REMOVE: self._get_remove_actions(),
         }
 
-    def update_view(self, model: Mapping[ActionType, List[ConvertAction]]):
+    def update_model(self, model: Mapping[ActionType, List[ConvertAction]]):
         self.models = model
         self._update_remove_view()
         self._update_replace_view()
-
-    def show(self, model: Mapping[ActionType, List[ConvertAction]] | None = None):
-        if model is not None:
-            self.update_view(model)
-        self.grid()
-
-    def hide(self):
-        self.grid_remove()

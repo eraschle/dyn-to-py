@@ -49,8 +49,8 @@ def _create_button(
 ) -> tk.Frame:
     button = tk.Button(frame, text=name, command=command)
     button.grid(
-        row=args.row_index,
-        column=args.column_index,
+        row=args.row,
+        column=args.column,
         sticky=args.sticky,
         padx=args.padding.padx,
         pady=args.padding.pady,

@@ -1,17 +1,45 @@
 from pathlib import Path
 from typing import Callable, List
 
-NAME_LOOKUP = [" ", "<", ">", "?", "|", "*", "/", "\\", "\"", ":", ";", ",", "-"]
+NAME_LOOKUP = [
+    " ",
+    "<",
+    ">",
+    "#",
+    "?",
+    "!",
+    "|",
+    "*",
+    "/",
+    "\\",
+    "\"",
+    ":",
+    ";",
+    ",",
+    ".",
+    "-",
+    "$",
+    "(",
+    ")",
+    "{",
+    "}",
+    "[",
+    "]",
+]
 NAME_SEPARATOR = "_"
 
 
 def clean_name(name: str) -> str:
+    extension = Path(name).suffix.strip()
+    if len(extension) > 0:
+        name = name[: -len(extension)]
     for replace in NAME_LOOKUP:
         name = name.replace(replace, NAME_SEPARATOR)
     names = name.split(NAME_SEPARATOR)
     names = [name.strip() for name in names if name is not None]
     names = [name for name in names if len(name) > 0]
-    return NAME_SEPARATOR.join(names)
+    clean = NAME_SEPARATOR.join(names)
+    return f"{clean}{extension}"
 
 
 def path_as_str(file_path: Path) -> str:

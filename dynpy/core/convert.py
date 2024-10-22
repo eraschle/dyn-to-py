@@ -26,12 +26,12 @@ class ConvertHandler:
             raise ValueError("No source name provided")
         return self.convert.source_by(self.source_name)
 
-    def _apply_action(self, action_type: ActionType, lines: List[str]) -> List[str]:
+    def _apply_func(self, action_type: ActionType, lines: List[str]) -> List[str]:
         for action in self.convert.actions_by(action_type):
             lines = action.apply(lines)
         return lines
 
-    def _restore_action(self, action_type: ActionType, lines: List[str]) -> List[str]:
+    def restore_func(self, action_type: ActionType, lines: List[str]) -> List[str]:
         for action in self.convert.actions_by(action_type):
             lines = action.restore(lines)
         return lines
@@ -41,10 +41,12 @@ class ConvertHandler:
         if self.direction == Direction.UNKNOWN:
             raise ValueError("Unknown direction")
         if self.direction == Direction.TO_PYTHON:
-            return self._apply_action
-        return self._restore_action
+            return self._apply_func
+        return self.restore_func
 
     def apply_action(self, lines: List[str]) -> List[str]:
+        if self.direction == Direction.UNKNOWN:
+            return lines
         for action_type in ActionType:
             lines = self.action_func(action_type, lines)
         return lines

@@ -55,7 +55,7 @@ class LabelEntry:
         variable = options.label_name(parent)
         self._label = tk.Label(parent, textvariable=variable)
         parent.grid_columnconfigure(
-            **options.args.column_args(weight=0), minsize=options.args.west_min
+            **options.args.column_args(weight=0, minsize=options.args.west_min)
         )
         self._label.grid(cnf=options.args.grid_args(sticky=tk.W))
         return variable

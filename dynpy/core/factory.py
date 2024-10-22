@@ -1,16 +1,11 @@
-from dataclasses import asdict
+import logging
 from functools import cache
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Mapping, Type
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Type
 
 from dynpy.core import context as ctx
 from dynpy.core import reader
-from dynpy.core.actions import (
-    ActionType,
-    ConvertAction,
-    RemoveLineAction,
-    TypeIgnoreAction,
-)
+from dynpy.core.actions import ActionType, ConvertAction, RemoveLineAction, TypeIgnoreAction
 from dynpy.core.models import (
     CodeNode,
     ContentNode,
@@ -21,6 +16,8 @@ from dynpy.core.models import (
     PythonFile,
     SourceConfig,
 )
+
+log = logging.getLogger(__name__)
 
 
 def source_config(content: Mapping[str, Any]) -> SourceConfig:
@@ -45,7 +42,7 @@ def _get_actions(
     return [_get_action(action_type)(**act) for act in content]
 
 
-def _create_actions(action_content: Mapping[str, Any]) -> Mapping[ActionType, List[ConvertAction]]:
+def _create_actions(action_content: Mapping[str, Any]) -> Dict[ActionType, List[ConvertAction]]:
     actions = {}
     for action, content in action_content.items():
         action_type = ActionType(action)
@@ -156,16 +153,28 @@ def _info_key(key: str) -> str:
 
 
 _INFO_PREFIX: str = "# -*-"
+_INFO_SUFFIX: str = "-*-"
 _INFO_SEPARATOR: str = ";"
 
 
-def node_info(node_info: str) -> NodeInfo:
-    node_info = node_info.replace(_INFO_PREFIX, "")
+def node_info(node_info: str) -> Optional[NodeInfo]:
+    if not node_info.startswith(_INFO_PREFIX):
+        log.error(f"Invalid NodeInfo > does not start with {_INFO_PREFIX}: {node_info}")
+        return None
+    node_info = node_info.removeprefix(_INFO_PREFIX).strip()
+    node_info = node_info.replace("\"", "")
+    if _INFO_SUFFIX in node_info:
+        node_info = node_info.removesuffix(_INFO_SUFFIX).strip()
     infos = node_info.split(_INFO_SEPARATOR)
     infos = [value.split(":") for value in infos]
+    infos = [info for info in infos if len(info) == 2]
     info_dict: Mapping[str, Any] = {_info_key(key): value.strip() for key, value in infos}
     info_dict = {key: _info_value(key, value) for key, value in info_dict.items()}
-    return NodeInfo(**info_dict)
+    try:
+        return NodeInfo(**info_dict)
+    except TypeError:
+        log.error(f"Invalid NodeInfo: {node_info}", exc_info=True)
+        return None
 
 
 def node_info_to_dict(info: NodeInfo) -> Dict[str, str]:
@@ -179,26 +188,53 @@ def node_info_to_dict(info: NodeInfo) -> Dict[str, str]:
 def _info_as_str(info: NodeInfo) -> str:
     infos = [f"{key}: {value}" for key, value in node_info_to_dict(info).items()]
     info_str = f"{_INFO_SEPARATOR} ".join(infos)
-    return f"{_INFO_PREFIX} {info_str}"
+    return f"{_INFO_PREFIX} {info_str} {_INFO_SUFFIX}"
 
 
-def code_to_python(node: ContentNode, action_func: Callable[[List[str]], List[str]]) -> List[str]:
-    code_lines = node.code.splitlines(keepends=False)
+def dynamo_to_python_code(code: str) -> List[str]:
+    code_lines = code.splitlines(keepends=False)
+    code_lines = clean_empty_lines(code_lines)
+    return code_lines
+
+
+ActionFunc = Callable[[List[str]], List[str]]
+
+
+def code_to_python(node: ContentNode, action_func: ActionFunc) -> List[str]:
+    code_lines = dynamo_to_python_code(node.code)
     code_lines = action_func(code_lines)
-    lines = [_info_as_str(node.node_info), "", ""]
+    lines = [_info_as_str(node.node_info), ""]
     lines.extend(code_lines)
     return lines
 
 
-def code_to_dynamo(lines: List[str], action_func: Callable[[List[str]], List[str]]) -> str:
-    lines = action_func(lines)
-    return "\n".join(lines)
+def clean_beginning_empty_lines(lines: List[str]) -> List[str]:
+    while len(lines[0].strip()) == 0:
+        lines.pop(0)
+    return lines
 
 
-def python_file(path: Path, action_func: Callable[[List[str]], List[str]]) -> PythonFile:
+def clean_ending_empty_lines(lines: List[str]) -> List[str]:
+    while len(lines[-1].strip()) == 0:
+        lines.pop()
+    return lines
+
+
+def clean_empty_lines(lines: List[str]) -> List[str]:
+    return clean_ending_empty_lines(clean_beginning_empty_lines(lines))
+
+
+def python_to_dynamo_code(code_lines: List[str], action_func: ActionFunc) -> List[str]:
+    code_lines = action_func(code_lines)
+    code_lines = clean_empty_lines(code_lines)
+    return code_lines
+
+
+def python_file(path: Path, action_func: ActionFunc) -> PythonFile:
     code_lines = reader.read_python(path)
-    return PythonFile(
-        path=path,
-        info=node_info(code_lines[0]),
-        code=code_to_dynamo(code_lines[1:], action_func),
-    )
+    code_lines = clean_beginning_empty_lines(code_lines)
+    info = node_info(code_lines[0])
+    if info is not None:
+        code_lines = code_lines[1:]
+    code_lines = python_to_dynamo_code(code_lines, action_func)
+    return PythonFile(path=path, info=info, code_lines=code_lines)

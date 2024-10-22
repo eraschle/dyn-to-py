@@ -40,6 +40,7 @@ class GridArgs(TypedDict):
 class ConfigArgs(TypedDict):
     index: NotRequired[int]
     weight: NotRequired[int]
+    minsize: NotRequired[int]
 
 
 @dataclass
@@ -50,25 +51,20 @@ class UiArgs:
             args['padding'] = UiPadding.from_dict(args)
         return UiArgs(**args)
 
-    row_index: int = 0
-    row_weight: int = 1
-    column_index: int = 0
-    column_weight: int = 1
+    row: int = 0
+    column: int = 0
     columnspan: int = 1
     sticky: str = tk.EW
     padding: UiPadding = field(default_factory=UiPadding)
     west_min: int = 140
     east_min: int = 150
 
-    def add_row(self, weight: int = 1):
-        self.column_index = 0
-        self.column_weight = 1
-        self.row_index += 1
-        self.row_weight = weight
+    def add_row(self):
+        self.column = 0
+        self.row += 1
 
-    def add_column(self, weight: int = 1):
-        self.column_weight = weight
-        self.column_index += 1
+    def add_column(self):
+        self.column += 1
 
     def as_dict(self, *args: str) -> Dict[str, Any]:
         attr_dict = asdict(self)
@@ -84,9 +80,9 @@ class UiArgs:
         return attr_dict
 
     def _clean_grid_args(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        for key in ('padx_e', 'west_min', 'east_min', 'row_weight', 'column_weight'):
+        for key in ('padx_e', 'west_min', 'east_min'):
             args.pop(key, None)
-        return {key.removesuffix("_index"): value for key, value in args.items()}
+        return args
 
     def grid_args(self, **kwargs: Unpack[GridArgs]) -> Dict[str, Any]:
         args = self.as_dict()
@@ -95,9 +91,10 @@ class UiArgs:
         return args
 
     def _get_config_args(self, name: str, **kwargs: Unpack[ConfigArgs]) -> ConfigArgs:
-        prefix = f"{name}_"
-        args = self.as_dict(*(f"{prefix}index", f"{prefix}weight"))
-        args = {key.removeprefix(prefix): value for key, value in args.items()}
+        args = self.as_dict(*(name,))
+        args["index"] = args.pop(name, 0)
+        if "weight" not in kwargs:
+            kwargs["weight"] = 1
         args.update(kwargs)
         return ConfigArgs(**args)
 
@@ -110,7 +107,7 @@ class UiArgs:
     def create(self, **kwargs: Unpack[GridArgs]) -> "UiArgs":
         args = self.to_dict()
         args.update(kwargs)
-        args["row_index"] = args.pop("row", 0)
-        args["column_index"] = args.pop("column", 0)
+        args["row"] = args.pop("row", 0)
+        args["column"] = args.pop("column", 0)
         args["sticky"] = args.pop("sticky", tk.EW)
         return UiArgs.from_dict(args)

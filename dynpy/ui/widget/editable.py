@@ -137,7 +137,7 @@ class EditableListboxFrame(tk.Frame):
         for name, command in self._get_buttons_args():
             if len(buttons) > 0:
                 args.add_column()
-            self.grid_columnconfigure(**args.column_args(weight=0), minsize=args.east_min)
+            self.grid_columnconfigure(**args.column_args(weight=0, minsize=args.east_min))
             button = tk.Button(master=self, text=name, command=command)
             button.grid(cnf=args.grid_args())
             buttons.append(button)

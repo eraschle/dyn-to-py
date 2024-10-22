@@ -9,6 +9,7 @@ class DynPyResource(str, Enum):
     ICON_APP = "favicon.png"
     ICON_LOAD = "load_config.png"
     ICON_CREATE = "create_config.png"
+    ICON_CONVERT = "convert.png"
 
 
 def icon_path(resource: DynPyResource) -> Path:

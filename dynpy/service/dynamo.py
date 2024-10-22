@@ -12,7 +12,7 @@ def _get_code_nodes(context: DynamoFileContext) -> List[CodeNode]:
     return [factory.code_node(node=node) for node in context.code_nodes]
 
 
-def _content_nodes(context: DynamoFileContext) -> List[ContentNode]:
+def content_nodes(context: DynamoFileContext) -> List[ContentNode]:
     nodes = []
     view_maps = context.views_mapping
     for node in _get_code_nodes(context):
@@ -44,5 +44,5 @@ def _create_python_files(nodes: Sequence[ContentNode], handler: ConvertHandler):
 def to_python(handler: ConvertHandler):
     for dyn_file in handler.source.source_files():
         with DynamoFileContext(dyn_file, save=False) as ctx:
-            nodes = _content_nodes(ctx)
+            nodes = content_nodes(ctx)
         _create_python_files(nodes, handler)

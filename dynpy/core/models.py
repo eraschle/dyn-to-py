@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, ClassVar, Dict, Iterable, List, Mapping, OrderedDict
+from typing import Any, ClassVar, Dict, Iterable, List, Mapping, Optional, OrderedDict
 
 from dynpy.core import paths as pth
 from dynpy.core import reader
@@ -62,9 +62,9 @@ class ContentNode:
     @property
     def node_info(self) -> NodeInfo:
         return NodeInfo(
-            self.node_id,
-            self.code_engine,
-            pth.path_as_str(self.path),
+            uuid=self.node_id,
+            engine=self.code_engine,
+            path=pth.path_as_str(self.path),
         )
 
     @property
@@ -85,11 +85,17 @@ class ContentNode:
 @dataclass(frozen=True)
 class PythonFile:
     path: Path
-    code: str
-    info: NodeInfo
+    code_lines: List[str]
+    info: Optional[NodeInfo]
+
+    @property
+    def code(self) -> str:
+        return "\n".join(self.code_lines)
 
     @property
     def dynamo_path(self) -> Path:
+        if self.info is None:
+            raise ValueError("No node info provided")
         return Path(self.info.path)
 
 
@@ -113,12 +119,16 @@ class SourceConfig:
         return path.suffix in self.source_ext
 
     def source_files(self) -> List[Path]:
+        if not self.source_path.exists():
+            return []
         return pth.get_files(self.source_path, self.is_source)
 
     def is_export(self, path: Path) -> bool:
         return path.suffix == self.export_ext
 
     def export_files(self) -> List[Path]:
+        if not self.export_path.exists():
+            return []
         return pth.get_files(self.export_path, self.is_export)
 
     def _check_is_source(self, file_path: Path) -> None:
@@ -146,7 +156,7 @@ class ConvertConfig:
     extension: ClassVar[str] = "dynpy"
 
     sources: List[SourceConfig]
-    actions: Mapping[ActionType, List[ConvertAction]] = field(default_factory=dict)
+    actions: Dict[ActionType, List[ConvertAction]] = field(default_factory=dict)
 
     def add_source(self, source: SourceConfig) -> None:
         if source in self.sources:
@@ -158,6 +168,14 @@ class ConvertConfig:
             return
         index = self.sources.index(source)
         self.sources[index] = source
+
+    def set_sources(self, sources: List[SourceConfig]) -> None:
+        self.sources.clear()
+        self.sources.extend(sources)
+
+    def set_actions(self, actions: Mapping[ActionType, List[ConvertAction]]) -> None:
+        self.actions.clear()
+        self.actions.update(actions)
 
     def actions_by(self, action: ActionType) -> List[ConvertAction]:
         return self.actions.get(action, [])

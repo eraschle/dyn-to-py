@@ -115,7 +115,7 @@ class SourceView(tk.Frame, IView[SourceConfig]):
         self.frm_buttons.grid(cnf=args.grid_args(sticky=tk.EW))
         btn_args = args.create()
         self.frm_buttons.grid_columnconfigure(
-            **btn_args.column_args(weight=0), minsize=btn_args.east_min
+            **btn_args.column_args(weight=0, minsize=btn_args.east_min)
         )
         self.btn_create = tk.Button(self.frm_buttons, text="Create", command=self.on_create)
         self.btn_create.grid(cnf=btn_args.grid_args())
@@ -123,7 +123,7 @@ class SourceView(tk.Frame, IView[SourceConfig]):
         self.btn_save.grid(cnf=btn_args.grid_args())
         btn_args.add_column()
         self.frm_buttons.grid_columnconfigure(
-            **btn_args.column_args(weight=0), minsize=btn_args.east_min
+            **btn_args.column_args(weight=0, minsize=btn_args.east_min)
         )
         self.btn_cancel = tk.Button(self.frm_buttons, text="Cancel", command=self.on_cancel)
         self.btn_cancel.grid(cnf=btn_args.grid_args())
@@ -167,7 +167,7 @@ class SourceView(tk.Frame, IView[SourceConfig]):
     def on_create(self):
         model = SourceConfig(name="<Source Name>", source="<Source Path>", export="<Export Path>")
         self._toggle_buttons(to_normal=False)
-        self.update_view(model)
+        self.update_model(model)
 
     def on_save(self):
         if self.model.is_valid:
@@ -184,16 +184,8 @@ class SourceView(tk.Frame, IView[SourceConfig]):
     def get_model(self) -> SourceConfig:
         return self.model.get_model()
 
-    def update_view(self, model: SourceConfig):
+    def update_model(self, model: SourceConfig):
         self.model.update_model(model)
-
-    def show(self, model: Optional[SourceConfig] = None):
-        if model is not None:
-            self.update_view(model)
-        self.grid()
-
-    def hide(self):
-        self.grid_remove()
 
 
 class SourceListView(tk.Frame, IView[List[SourceConfig]]):
@@ -261,7 +253,7 @@ class SourceListView(tk.Frame, IView[List[SourceConfig]]):
             self.update_model_at(self.current_idx)
         self.current_idx = index
         model = self.models[self.current_idx]
-        self.viw_model.update_view(model)
+        self.viw_model.update_model(model)
 
     def show_selected_model(self):
         index = 0 if self.current_idx is None else self.current_idx
@@ -285,15 +277,7 @@ class SourceListView(tk.Frame, IView[List[SourceConfig]]):
         if self.current_idx is not None:
             self.lst_sources.selection_set(self.current_idx)
 
-    def update_view(self, model: List[SourceConfig]):
+    def update_model(self, model: List[SourceConfig]):
         self.models = model
         self.current_idx = None
         self.update_listbox()
-
-    def show(self, model: Optional[List[SourceConfig]] = None):
-        if model is not None:
-            self.update_view(model)
-        self.grid()
-
-    def hide(self):
-        self.grid_remove()
