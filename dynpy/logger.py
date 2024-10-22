@@ -61,9 +61,9 @@ def console(level) -> logging.Handler:
 #     return handler
 
 
-def config_logger():
+def config_logger(level: int) -> None:
     handlers = [
-        console(logging.DEBUG),
+        console(level),
         # log_file(logging.INFO),
     ]
-    logging.basicConfig(handlers=handlers, level=logging.DEBUG)
+    logging.basicConfig(handlers=handlers, level=level)

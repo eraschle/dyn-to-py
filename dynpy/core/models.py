@@ -5,7 +5,7 @@ from typing import Any, ClassVar, Dict, Iterable, List, Mapping, Optional, Order
 
 from dynpy.core import paths as pth
 from dynpy.core import reader
-from dynpy.core.actions import ActionType, ConvertAction
+from dynpy.core.actions import ActionType, AConvertAction
 
 
 @dataclass(frozen=True)
@@ -19,6 +19,10 @@ class NodeView(DynamoNode):
 
 
 class PythonEngine(str, Enum):
+    @classmethod
+    def short(cls, engine: "PythonEngine") -> str:
+        return f"py{engine.value[-1]}"
+
     IRON_PYTHON_2 = "IronPython2"
     IRON_PYTHON_3 = "IronPython3"
     C_PYTHON_3 = "CPython3"
@@ -69,8 +73,8 @@ class ContentNode:
 
     @property
     def file_name(self) -> str:
-        version = self.code_engine.value[-1]
-        return f"{self.node_name}_py{version}_{self.node_id}"
+        version = PythonEngine.short(self.code_engine)
+        return f"{self.node_name}_{version}_{self.node_id}"
 
     @property
     def as_dir(self) -> str:
@@ -98,6 +102,20 @@ class PythonFile:
             raise ValueError("No node info provided")
         return Path(self.info.path)
 
+def _default_exclude_dirs() -> List[str]:
+    return [
+        "__pycache__",
+        ".git",
+        ".vscode",
+        ".idea",
+        ".mypy_cache",
+        ".pytest_cache",
+        "dist",
+        "build",
+        "venv",
+        ".venv",
+    ]
+
 
 @dataclass(frozen=True)
 class SourceConfig:
@@ -106,6 +124,13 @@ class SourceConfig:
     name: str = field(compare=True, hash=True, repr=True)
     source: str = field(compare=True, hash=False, repr=True)
     export: str = field(compare=True, hash=False, repr=True)
+    exclude_dirs: List[str] = field(default_factory=_default_exclude_dirs)
+
+    def _is_exclude_dir(self, dir_name: str) -> bool:
+        return dir_name in self.exclude_dirs
+
+    def is_exclude(self, path: Path) -> bool:
+        return any(self._is_exclude_dir(parent.name) for parent in path.parents)
 
     @property
     def source_path(self) -> Path:
@@ -116,25 +141,38 @@ class SourceConfig:
         return Path(self.export)
 
     def is_source(self, path: Path) -> bool:
+        if self.is_exclude(path):
+            return False
         return path.suffix in self.source_ext
 
     def source_files(self) -> List[Path]:
         if not self.source_path.exists():
             return []
-        return pth.get_files(self.source_path, self.is_source)
+        return pth.get_files(self.source_path, self.is_source, self.is_exclude)
 
     def is_export(self, path: Path) -> bool:
+        if self.is_exclude(path):
+            return False
         return path.suffix == self.export_ext
 
     def export_files(self) -> List[Path]:
         if not self.export_path.exists():
             return []
-        return pth.get_files(self.export_path, self.is_export)
+        return pth.get_files(self.export_path, self.is_export, self.is_exclude)
+
+    def _is_parent(self, path: Path, parent_path: Path) -> bool:
+        if path == parent_path:
+            return True
+        for parent in path.parents:
+            if parent != parent_path:
+                continue
+            return True
+        return False
 
     def _check_is_source(self, file_path: Path) -> None:
         if not file_path.exists():
             raise FileNotFoundError(f"{file_path} not found")
-        if pth.path_as_str(file_path).startswith(self.source):
+        if self._is_parent(file_path, self.source_path):
             return
         raise Exception(f"{file_path} is not sub path of {self.source}")
 
@@ -151,13 +189,14 @@ class SourceConfig:
         }
 
 
+
 @dataclass(frozen=True)
 class ConvertConfig:
     extension: ClassVar[str] = "dynpy"
 
     file_path: Optional[Path]
     sources: List[SourceConfig]
-    actions: Dict[ActionType, List[ConvertAction]] = field(default_factory=dict)
+    actions: Dict[ActionType, List[AConvertAction]] = field(default_factory=dict)
 
     def add_source(self, source: SourceConfig) -> None:
         if source in self.sources:
@@ -174,11 +213,11 @@ class ConvertConfig:
         self.sources.clear()
         self.sources.extend(sources)
 
-    def set_actions(self, actions: Mapping[ActionType, List[ConvertAction]]) -> None:
+    def set_actions(self, actions: Mapping[ActionType, List[AConvertAction]]) -> None:
         self.actions.clear()
         self.actions.update(actions)
 
-    def actions_by(self, action: ActionType) -> List[ConvertAction]:
+    def actions_by(self, action: ActionType) -> List[AConvertAction]:
         return self.actions.get(action, [])
 
     def _action_dict(self, action: ActionType) -> List[Dict[str, Any]]:

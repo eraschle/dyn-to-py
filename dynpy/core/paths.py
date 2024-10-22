@@ -52,14 +52,13 @@ def replace_path(path: Path, from_path: str, to_path: str) -> Path:
     return Path(path_str)
 
 
-def get_files(current: Path, callback: Callable[[Path], bool]) -> List[Path]:
+def get_files(current: Path, is_source_cb: Callable[[Path], bool], is_exclude_cb: Callable[[Path], bool]) -> List[Path]:
     if current.is_file():
-        return [current] if callback(current) else []
+        return [current] if is_source_cb(current) else []
     dyn_files = []
     for path in current.iterdir():
-        if path.is_dir():
-            dyn_files.extend(get_files(path, callback))
-        if not callback(path):
-            continue
-        dyn_files.append(path)
+        if path.is_dir() and not is_exclude_cb(path):
+            dyn_files.extend(get_files(path, is_source_cb, is_exclude_cb))
+        elif path.is_file() and is_source_cb(path):
+            dyn_files.append(path)
     return dyn_files

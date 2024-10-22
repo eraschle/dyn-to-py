@@ -5,7 +5,7 @@ from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Type
 
 from dynpy.core import context as ctx
 from dynpy.core import reader
-from dynpy.core.actions import ActionType, ConvertAction, RemoveLineAction, TypeIgnoreAction
+from dynpy.core.actions import ActionType, AConvertAction, RemoveConvertAction, ReplaceConvertAction
 from dynpy.core.models import (
     CodeNode,
     ContentNode,
@@ -32,17 +32,15 @@ def _create_sources(content: Iterable[Mapping[str, Any]]) -> List[SourceConfig]:
     return [source_config(source) for source in content]
 
 
-def _get_action(action_type: ActionType) -> Type[ConvertAction]:
-    return TypeIgnoreAction if action_type == ActionType.REPLACE else RemoveLineAction
+def _get_action(action_type: ActionType) -> Type[AConvertAction]:
+    return ReplaceConvertAction if action_type == ActionType.REPLACE else RemoveConvertAction
 
 
-def _get_actions(
-    action_type: ActionType, content: Iterable[Mapping[str, Any]]
-) -> List[ConvertAction]:
+def _get_actions(action_type: ActionType, content: Iterable[Mapping[str, Any]]) -> List[AConvertAction]:
     return [_get_action(action_type)(**act) for act in content]
 
 
-def _create_actions(action_content: Mapping[str, Any]) -> Dict[ActionType, List[ConvertAction]]:
+def _create_actions(action_content: Mapping[str, Any]) -> Dict[ActionType, List[AConvertAction]]:
     actions = {}
     for action, content in action_content.items():
         action_type = ActionType(action)
@@ -59,8 +57,8 @@ def convert_config(path: Path) -> ConvertConfig:
     )
 
 
-def default_remove_action() -> RemoveLineAction:
-    return RemoveLineAction(
+def default_remove_action() -> RemoveConvertAction:
+    return RemoveConvertAction(
         contains=[
             "# Load the Python Standard",
             "Phython-Standard- und DesignScript-Bibliotheken laden",
@@ -73,8 +71,8 @@ def default_remove_action() -> RemoveLineAction:
     )
 
 
-def default_type_ignore_action() -> TypeIgnoreAction:
-    return TypeIgnoreAction(
+def default_type_ignore_action() -> ReplaceConvertAction:
+    return ReplaceConvertAction(
         value="# type: ignore",
         contains=[
             "clr.ImportExtensions(Revit.Elements)",
@@ -84,7 +82,11 @@ def default_type_ignore_action() -> TypeIgnoreAction:
             "InvalidOperationException:" "LabelUtils.GetLabelFor",
             "basestring",
         ],
-        regex=[],
+        regex=[
+            "^from System import [a-zA-Z]+",
+            "[^a-zA-Z0-9]+IN\\[\\d*\\]",
+            "[^a-zA-Z0-9]+UnwrapElement\\([a-zA-Z]+.*\\)",
+        ],
     )
 
 
@@ -151,7 +153,17 @@ def _info_value(key: str, value: Any) -> Any:
 
 
 def _info_key(key: str) -> str:
-    return key.strip().replace("node-", "")
+    return key.strip().removeprefix("node-")
+
+
+def _repair_path(info: List[str]) -> List[str]:
+    if len(info) != 3:
+        return info
+    return [info[0], f"{info[1]}:{info[2]}"]
+
+
+def _trim_values(info: List[str]) -> List[str]:
+    return [value.strip() for value in info]
 
 
 _INFO_PREFIX: str = "# -*-"
@@ -169,6 +181,8 @@ def node_info(node_info: str) -> Optional[NodeInfo]:
         node_info = node_info.removesuffix(_INFO_SUFFIX).strip()
     infos = node_info.split(_INFO_SEPARATOR)
     infos = [value.split(":") for value in infos]
+    infos = [_trim_values(info) for info in infos]
+    infos = [_repair_path(info) for info in infos]
     infos = [info for info in infos if len(info) == 2]
     info_dict: Mapping[str, Any] = {_info_key(key): value.strip() for key, value in infos}
     info_dict = {key: _info_value(key, value) for key, value in info_dict.items()}
@@ -235,6 +249,9 @@ def python_to_dynamo_code(code_lines: List[str], action_func: ActionFunc) -> Lis
 def python_file(path: Path, action_func: ActionFunc) -> PythonFile:
     code_lines = reader.read_python(path)
     code_lines = clean_beginning_empty_lines(code_lines)
+    if len(code_lines) < 2:
+        message = f"Python file {path} has no info line or code"
+        raise Exception(message)
     info = node_info(code_lines[0])
     if info is not None:
         code_lines = code_lines[1:]

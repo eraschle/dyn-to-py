@@ -13,6 +13,10 @@ KEY_NODES = "Nodes"
 KEY_VIEW = "View"
 KEY_NODE_VIEWS = "NodeViews"
 KEY_NODE_TYPE = "NodeType"
+KEY_ANNOTATIONS = "Annotations"
+KEY_CONNECTORS = "Connectors"
+KEY_LIBRARY_DEPENDENCIES = "NodeLibraryDependencies"
+KEY_DEPENDENCIES_TYPE = "ReferenceType"
 PYTHON_NODE_TYPE = "PythonScriptNode"
 
 
@@ -39,6 +43,18 @@ def node_engine(content: Mapping[str, Any]) -> PythonEngine:
     return PythonEngine(engine)
 
 
+def _dependency_type(content: Mapping[str, Any]) -> str:
+    return content.get(KEY_DEPENDENCIES_TYPE, "")
+
+
+def is_package_dependency(content: Mapping[str, Any]) -> bool:
+    return _dependency_type(content) == "Package"
+
+
+def is_external_dependency(content: Mapping[str, Any]) -> bool:
+    return _dependency_type(content) == "External"
+
+
 class DynamoFileContext:
     def __init__(self, path: Path, save: bool = True):
         self.path = path
@@ -61,6 +77,27 @@ class DynamoFileContext:
     @property
     def code_nodes(self) -> List[Mapping[str, Any]]:
         return [node for node in self.nodes if is_code_node(node)]
+
+    @property
+    def library_dependencies(self) -> List[Mapping[str, Any]]:
+        return self.content.get(KEY_LIBRARY_DEPENDENCIES, [])
+
+    @property
+    def package_dependencies(self) -> List[Mapping[str, Any]]:
+        return [dep for dep in self.library_dependencies if is_package_dependency(dep)]
+
+    @property
+    def external_dependencies(self) -> List[Mapping[str, Any]]:
+        return [dep for dep in self.library_dependencies if is_external_dependency(dep)]
+
+    @property
+    def annotations(self) -> List[Mapping[str, Any]]:
+        views = self.content.get(KEY_VIEW, {})
+        return views.get(KEY_ANNOTATIONS, [])
+
+    @property
+    def connectors(self) -> List[Mapping[str, Any]]:
+        return self.content.get(KEY_CONNECTORS, [])
 
     def index_of(self, node_id: str) -> int:
         for idx, node in enumerate(self.nodes):

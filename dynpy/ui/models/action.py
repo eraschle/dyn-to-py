@@ -2,7 +2,7 @@ import tkinter as tk
 from typing import Iterable, List, Mapping, Optional, Type
 
 from dynpy.core import factory
-from dynpy.core.actions import ActionType, ConvertAction, RemoveLineAction, TypeIgnoreAction
+from dynpy.core.actions import ActionType, AConvertAction, RemoveConvertAction, ReplaceConvertAction
 from dynpy.ui.models.uiargs import UiArgs
 from dynpy.ui.models.views import IView
 from dynpy.ui.widget.editable import EditableListboxFrame
@@ -20,7 +20,7 @@ def _editable_listbox_frame(master: tk.Misc, text: str, args: UiArgs) -> Editabl
     return lst_edit
 
 
-class RemoveActionLabelFrame(tk.LabelFrame, IView[RemoveLineAction]):
+class RemoveActionLabelFrame(tk.LabelFrame, IView[RemoveConvertAction]):
     def __init__(self, master: tk.Misc, text: str):
         super().__init__(master=master, text=text)
         args = UiArgs(sticky=tk.NSEW)
@@ -29,15 +29,15 @@ class RemoveActionLabelFrame(tk.LabelFrame, IView[RemoveLineAction]):
         self.grid_columnconfigure(**args.column_args())
         self.edt_values = _editable_listbox_frame(self, "Values", args)
 
-    def get_model(self) -> RemoveLineAction:
+    def get_model(self) -> RemoveConvertAction:
         self.action.contains = self.edt_values.get_values()
         return self.action
 
-    def update_model(self, model: RemoveLineAction):
+    def update_model(self, model: RemoveConvertAction):
         self.action = model
         self.edt_values.update_values(model.contains)
 
-    def show(self, model: Optional[RemoveLineAction] = None):
+    def show(self, model: Optional[RemoveConvertAction] = None):
         if model is not None:
             self.update_model(model)
         self.grid()
@@ -46,7 +46,7 @@ class RemoveActionLabelFrame(tk.LabelFrame, IView[RemoveLineAction]):
         self.grid_remove()
 
 
-class ReplaceActionLabelFrame(tk.LabelFrame, IView[TypeIgnoreAction]):
+class ReplaceActionLabelFrame(tk.LabelFrame, IView[ReplaceConvertAction]):
     def __init__(self, master: tk.Misc, text: str):
         super().__init__(master=master, text=text)
         args = UiArgs()
@@ -73,20 +73,20 @@ class ReplaceActionLabelFrame(tk.LabelFrame, IView[TypeIgnoreAction]):
         )
         return LabelEntry(frame, options=options)
 
-    def get_model(self) -> TypeIgnoreAction:
+    def get_model(self) -> ReplaceConvertAction:
         self.action.value = self.replace.value
         self.action.contains = self.edt_contain.get_values()
         self.action.regex = self.edt_regex.get_values()
         return self.action
 
-    def update_model(self, model: TypeIgnoreAction):
+    def update_model(self, model: ReplaceConvertAction):
         self.action = model
         self.replace.value = model.value
         self.edt_regex.update_values(model.regex)
         self.edt_contain.update_values(model.contains)
 
 
-class ConvertActionView(tk.Frame, IView[Mapping[ActionType, List[ConvertAction]]]):
+class ConvertActionView(tk.Frame, IView[Mapping[ActionType, List[AConvertAction]]]):
     def __init__(self, master: tk.Misc):
         super().__init__(master)
         args = UiArgs(sticky=tk.NSEW)
@@ -101,13 +101,13 @@ class ConvertActionView(tk.Frame, IView[Mapping[ActionType, List[ConvertAction]]
         self.remove = RemoveActionLabelFrame(self, "Remove Action")
         self.remove.grid(cnf=args.grid_args())
 
-    def _get_action[T](self, actions: Iterable[ConvertAction], action: Type[T]) -> List[T]:
+    def _get_action[T](self, actions: Iterable[AConvertAction], action: Type[T]) -> List[T]:
         return [act for act in actions if isinstance(act, action)]
 
-    def _replace_actions(self) -> List[TypeIgnoreAction]:
+    def _replace_actions(self) -> List[ReplaceConvertAction]:
         return self._get_action(
             actions=self.actions.get(ActionType.REPLACE, []),
-            action=TypeIgnoreAction,
+            action=ReplaceConvertAction,
         )
 
     def _update_replace_view(self):
@@ -116,15 +116,15 @@ class ConvertActionView(tk.Frame, IView[Mapping[ActionType, List[ConvertAction]]
             return
         self.replace.update_model(actions[0])
 
-    def _get_replace_actions(self) -> List[ConvertAction]:
+    def _get_replace_actions(self) -> List[AConvertAction]:
         if len(self._replace_actions()) == 0:
             return []
         return [self.replace.get_model()]
 
-    def _remove_actions(self) -> List[RemoveLineAction]:
+    def _remove_actions(self) -> List[RemoveConvertAction]:
         return self._get_action(
             actions=self.actions.get(ActionType.REMOVE, []),
-            action=RemoveLineAction,
+            action=RemoveConvertAction,
         )
 
     def _update_remove_view(self):
@@ -134,18 +134,18 @@ class ConvertActionView(tk.Frame, IView[Mapping[ActionType, List[ConvertAction]]
         else:
             self.remove.update_model(actions[0])
 
-    def _get_remove_actions(self) -> List[ConvertAction]:
+    def _get_remove_actions(self) -> List[AConvertAction]:
         if len(self._remove_actions()) == 0:
             return []
         return [self.remove.get_model()]
 
-    def get_model(self) -> Mapping[ActionType, List[ConvertAction]]:
+    def get_model(self) -> Mapping[ActionType, List[AConvertAction]]:
         return {
             ActionType.REPLACE: self._get_replace_actions(),
             ActionType.REMOVE: self._get_remove_actions(),
         }
 
-    def update_model(self, model: Mapping[ActionType, List[ConvertAction]]):
+    def update_model(self, model: Mapping[ActionType, List[AConvertAction]]):
         self.models = model
         self._update_remove_view()
         self._update_replace_view()

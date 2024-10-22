@@ -1,11 +1,12 @@
+import difflib
 import logging
 from pathlib import Path
-from typing import Callable, List, Mapping
+from typing import Callable, Iterable, List, Mapping, Optional, Tuple
 
-from dynpy.core import convert as hdl
 from dynpy.core import factory
-from dynpy.core.actions import ActionType, ConvertAction
-from dynpy.core.convert import ConvertHandler, Direction
+from dynpy.core import handler as hdl
+from dynpy.core.actions import AConvertAction, ActionType
+from dynpy.core.handler import ConvertHandler, Direction
 from dynpy.core.models import ConvertConfig, SourceConfig
 from dynpy.service import dynamo, python
 
@@ -40,6 +41,8 @@ class ConvertService:
 
     @property
     def can_save_config(self) -> bool:
+        if self._handler is None:
+            return False
         return self.config.can_save()
 
     def config_save(self):
@@ -63,9 +66,21 @@ class ConvertService:
         self.handler.source_name = source_name
         return self.handler
 
-    def set_convert_direction(self, direction: str) -> Direction:
-        self.handler.direction = Direction(direction)
+    @property
+    def source_name(self) -> Optional[str]:
+        return self.handler.source_name
+
+    @property
+    def direction(self) -> Direction:
         return self.handler.direction
+
+    @direction.setter
+    def direction(self, direction: Direction) -> None:
+        self.handler.direction = direction
+
+    @property
+    def has_direction(self) -> bool:
+        return self.handler.direction != Direction.UNKNOWN
 
     def source_exists(self, name: str) -> bool:
         config = self.handler.convert
@@ -83,7 +98,7 @@ class ConvertService:
         return self.handler.direction in self._convert_func
 
     def convert(self) -> None:
-        callback = self._convert_func.get(self.handler.direction, None)
+        callback = self._convert_func.get(self.direction, None)
         if callback is None:
             raise ValueError(f"Cannot convert {self.handler.direction}")
         callback(self.handler)
@@ -104,17 +119,39 @@ class ConvertService:
         self.config.set_sources(configs)
         return changed
 
-    def actions(self) -> Mapping[ActionType, List[ConvertAction]]:
+    def actions(self) -> Mapping[ActionType, List[AConvertAction]]:
         return self.config.actions
 
-    def _action_equal(self, action_type: ActionType, actions: List[ConvertAction]) -> bool:
+    def _action_equal(self, action_type: ActionType, actions: List[AConvertAction]) -> bool:
         existing = self.actions().get(action_type, [])
         return all(act in existing for act in actions)
 
-    def _same_actions(self, actions: Mapping[ActionType, List[ConvertAction]]) -> bool:
+    def _same_actions(self, actions: Mapping[ActionType, List[AConvertAction]]) -> bool:
         return all(self._action_equal(act, acts) for act, acts in actions.items())
 
-    def update_actions(self, actions: Mapping[ActionType, List[ConvertAction]]) -> bool:
+    def update_actions(self, actions: Mapping[ActionType, List[AConvertAction]]) -> bool:
         changed = not self._same_actions(actions)
         self.config.set_actions(actions)
         return changed
+
+    def code_diff(
+        self, source: Tuple[str, List[str]], other: Tuple[str, List[str]]
+    ) -> Iterable[str]:
+        source_name, source_code = source
+        other_name, other_code = other
+        count = max(len(source_code), len(other_code))
+        diff = list(
+            # To display the result after conversion,
+            # - source must be b
+            # - other must be a
+            difflib.unified_diff(
+                a=other_code,
+                fromfile=other_name,
+                b=source_code,
+                tofile=source_name,
+                n=count,
+            )
+        )
+        if len(diff) == 0:
+            return source_code
+        return diff

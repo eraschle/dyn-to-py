@@ -6,12 +6,12 @@ from tkinter import filedialog as dialog
 from tkinter import messagebox as msg
 from typing import TYPE_CHECKING, Optional, Protocol, Tuple, TypeVar
 
-from dynpy import ressources as res
+from dynpy import resources as res
 from dynpy.service import IConvertService
 from dynpy.ui.models.uiargs import UiArgs
 
 if TYPE_CHECKING:
-    from dynpy.ui.app import ConvertAppView
+    from dynpy.ui.app import DynPyAppView
 
 TModel = TypeVar("TModel")
 
@@ -41,7 +41,7 @@ class IView(Protocol[TModel]):
 
 
 class AAppView(ABC, tk.Frame):
-    def __init__(self, master: "ConvertAppView"):
+    def __init__(self, master: "DynPyAppView"):
         super().__init__(master)
         self.app = master
         self._init_view()
@@ -77,6 +77,11 @@ class AAppView(ABC, tk.Frame):
             return None
         return Path(file_path)
 
+    def _on_button_click(self, event):
+        if self.btn_view is None or event.widget != self.btn_view:
+            return
+        self._button_command()
+
     @abstractmethod
     def _button_command(self):
         pass
@@ -88,9 +93,11 @@ class AAppView(ABC, tk.Frame):
     def button(self, frame: tk.Frame) -> tk.Button:
         text, icon = self._button_text_and_icon()
         self.image = self._load_icon(frame, icon)
-        return tk.Button(
+        self.btn_view = tk.Button(
             frame, text=text, command=self._button_command, image=self.image, compound=tk.TOP
         )
+        self.btn_view.bind("<Button-1>", self._on_button_click)
+        return self.btn_view
 
     @abstractmethod
     def update_service(self, service: IConvertService) -> bool:
@@ -111,7 +118,7 @@ class AAppView(ABC, tk.Frame):
         pass
 
     @abstractmethod
-    def update_view(self, service: IConvertService) -> None:
+    def update_view(self) -> None:
         pass
 
     def show(self, args: UiArgs) -> None:

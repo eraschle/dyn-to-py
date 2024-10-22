@@ -2,7 +2,15 @@
 	"folders": [
 		{
 			"path": "."
+		},
+		{
+			"path": "../__data__/dyn_to_py"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"python.analysis.diagnosticMode": "workspace",
+		"python.analysis.stubPath": "${workspaceFolder}/../../__stubs__",
+		"python.analysis.extraPaths": [
+		]
+	}
 }

@@ -1,8 +1,8 @@
 from pathlib import Path
-from typing import List, Mapping, Protocol
+from typing import Iterable, List, Mapping, Protocol, Optional, Tuple
 
-from dynpy.core.actions import ActionType, ConvertAction
-from dynpy.core.convert import ConvertHandler, Direction
+from dynpy.core.actions import AConvertAction, ActionType
+from dynpy.core.handler import ConvertHandler, Direction
 from dynpy.core.models import SourceConfig
 
 
@@ -52,16 +52,46 @@ class IConvertService(Protocol):
             The convert handler"""
         ...
 
-    def set_convert_direction(self, direction: str) -> Direction:
+    @property
+    def source_name(self) -> Optional[str]:
+        """Return the source configuration name
+
+        Returns
+        -------
+        str
+            The source configuration name"""
+        ...
+
+    @property
+    def direction(self) -> Direction:
+        """Return the convert direction
+
+        Returns
+        -------
+        Direction
+            The convert direction"""
+        ...
+
+    @direction.setter
+    def direction(self, direction: Direction) -> None:
         """Set the convert direction
 
-        Set the convert direction to the given value.
-        If the direction is not valid, a ValueError is raised.
+        Set the convert direction to the given direction.
 
         Parameters
         ----------
-        direction : str
+        direction : Direction
             The convert direction"""
+        ...
+
+    @property
+    def has_direction(self) -> bool:
+        """Return whether a direction is set
+
+        Returns
+        -------
+        bool
+            Whether a direction is set"""
         ...
 
     @property
@@ -103,7 +133,7 @@ class IConvertService(Protocol):
             True if the source configurations were updated successfully"""
         ...
 
-    def actions(self) -> Mapping[ActionType, List[ConvertAction]]:
+    def actions(self) -> Mapping[ActionType, List[AConvertAction]]:
         """Return the actions
 
         Returns
@@ -112,7 +142,7 @@ class IConvertService(Protocol):
             The actions"""
         ...
 
-    def update_actions(self, actions: Mapping[ActionType, List[ConvertAction]]) -> bool:
+    def update_actions(self, actions: Mapping[ActionType, List[AConvertAction]]) -> bool:
         """Update the actions
 
         Update the actions with the given mapping.
@@ -181,4 +211,23 @@ class IConvertService(Protocol):
         ----------
         file_path : Path
             The path of the configuration file"""
+        ...
+
+    def code_diff(self, source: Tuple[str, List[str]], other: Tuple[str, List[str]]) -> Iterable[str]:
+        """Return the code difference between source and export code.
+
+        Return the code difference between the dynamo python code
+        and the export python code.
+
+        Parameters
+        ----------
+        source: Tuple[str, List[str]]
+            Source file name and python code
+        other: Tuple[str, List[str]]
+            Other file name and python code
+
+        Returns
+        -------
+        Iterable[str]
+            The code difference"""
         ...
