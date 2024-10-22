@@ -87,7 +87,7 @@ class IConvertService(Protocol):
             The source configurations"""
         ...
 
-    def update_sources(self, configs: List[SourceConfig]) -> None:
+    def update_sources(self, configs: List[SourceConfig]) -> bool:
         """Update the source configurations
 
         Update the source configurations with the given list.
@@ -95,7 +95,12 @@ class IConvertService(Protocol):
         Parameters
         ----------
         configs : List[SourceConfig]
-            The source configurations"""
+            The source configurations
+
+        Returns
+        -------
+        bool
+            True if the source configurations were updated successfully"""
         ...
 
     def actions(self) -> Mapping[ActionType, List[ConvertAction]]:
@@ -107,7 +112,7 @@ class IConvertService(Protocol):
             The actions"""
         ...
 
-    def update_actions(self, actions: Mapping[ActionType, List[ConvertAction]]):
+    def update_actions(self, actions: Mapping[ActionType, List[ConvertAction]]) -> bool:
         """Update the actions
 
         Update the actions with the given mapping.
@@ -115,7 +120,12 @@ class IConvertService(Protocol):
         Parameters
         ----------
         actions : Mapping[ActionType, List[ConvertAction]]
-            The actions"""
+            The actions
+
+        Returns
+        -------
+        bool
+            True if the actions were updated successfully"""
         ...
 
     def load_config(self, file_path: Path) -> None:
@@ -146,4 +156,29 @@ class IConvertService(Protocol):
         -------
         Path
             The path of the created configuration"""
+        ...
+
+    @property
+    def can_save_config(self) -> bool:
+        """Return whether the source configuration can be saved
+
+        Returns
+        -------
+        bool
+            Whether the source configuration can be saved"""
+        ...
+
+    def config_save(self) -> None:
+        """Save the source configuration"""
+        ...
+
+    def config_save_as(self, file_path: Path) -> None:
+        """Save the source configuration as
+
+        Save the source configuration to the given file path.
+
+        Parameters
+        ----------
+        file_path : Path
+            The path of the configuration file"""
         ...

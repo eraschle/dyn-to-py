@@ -51,9 +51,10 @@ class ConvertConfigAppView(AAppView):
         self.source.update_model(service.sources())
         self.actions.update_model(service.actions())
 
-    def update_service(self, service: IConvertService) -> None:
-        service.update_sources(self.source.get_model())
-        service.update_actions(self.actions.get_model())
+    def update_service(self, service: IConvertService) -> bool:
+        sources = service.update_sources(self.source.get_model())
+        actions = service.update_actions(self.actions.get_model())
+        return sources or actions
 
 
 class CreateConvertConfigAppView(ConvertConfigAppView):

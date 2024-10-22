@@ -63,7 +63,7 @@ def get_config_path(dir_path: Optional[Path]) -> Path:
 def create_config(dir_path: Optional[Path]) -> Path:
     file_path = get_config_path(dir_path=dir_path)
     config = factory.default_convert_config()
-    config.save(file_path)
+    config.save_as(file_path)
     return file_path
 
 

@@ -53,6 +53,7 @@ def _create_actions(action_content: Mapping[str, Any]) -> Dict[ActionType, List[
 def convert_config(path: Path) -> ConvertConfig:
     content = reader.read_json(path.resolve())
     return ConvertConfig(
+        file_path=path,
         sources=_create_sources(content["configs"]),
         actions=_create_actions(content["actions"]),
     )
@@ -89,6 +90,7 @@ def default_type_ignore_action() -> TypeIgnoreAction:
 
 def default_convert_config() -> ConvertConfig:
     config = ConvertConfig(
+        file_path=None,
         sources=[
             SourceConfig(
                 name="<SOURCE_NAME>",

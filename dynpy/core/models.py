@@ -103,9 +103,9 @@ class PythonFile:
 class SourceConfig:
     source_ext: ClassVar[Iterable[str]] = (".dyn", ".dyf")
     export_ext: ClassVar[str] = ".py"
-    name: str
-    source: str
-    export: str
+    name: str = field(compare=True, hash=True, repr=True)
+    source: str = field(compare=True, hash=False, repr=True)
+    export: str = field(compare=True, hash=False, repr=True)
 
     @property
     def source_path(self) -> Path:
@@ -155,6 +155,7 @@ class SourceConfig:
 class ConvertConfig:
     extension: ClassVar[str] = "dynpy"
 
+    file_path: Optional[Path]
     sources: List[SourceConfig]
     actions: Dict[ActionType, List[ConvertAction]] = field(default_factory=dict)
 
@@ -196,5 +197,13 @@ class ConvertConfig:
             return source
         raise Exception(f"Source {name} not found in the configuration")
 
-    def save(self, path: Path) -> None:
+    def can_save(self) -> bool:
+        return self.file_path is not None
+
+    def save(self) -> None:
+        if self.file_path is None:
+            raise ValueError("No file path provided")
+        self.save_as(self.file_path)
+
+    def save_as(self, path: Path) -> None:
         reader.write_json(path, OrderedDict(self.to_dict()))

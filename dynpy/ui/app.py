@@ -49,11 +49,17 @@ class ConvertAppView(tk.Tk):
         self.frm_load.grid(cnf=args.grid_args())
         self.setup_ui()
 
+    def update_service(self, view: AAppView) -> bool:
+        if not view.update_service(self.service):
+            return False
+        return self.service.can_save_config
+
     def switch_frame(self, view: AAppView):
         if self.current_view is None:
             self.frm_load.grid_forget()
         else:
-            self.current_view.update_service(self.service)
+            if self.update_service(self.current_view):
+                self.service.config_save()
             self.current_view.hide()
         self.current_view = view
         self.current_view.update_view(self.service)

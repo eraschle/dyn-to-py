@@ -93,7 +93,21 @@ class AAppView(ABC, tk.Frame):
         )
 
     @abstractmethod
-    def update_service(self, service: IConvertService) -> None:
+    def update_service(self, service: IConvertService) -> bool:
+        """Update the service
+
+        Update the service with the view values.
+
+        Parameters
+        ----------
+        service : IConvertService
+            The service
+
+        Returns
+        -------
+        bool
+            True if the service was updated successfully
+        """
         pass
 
     @abstractmethod

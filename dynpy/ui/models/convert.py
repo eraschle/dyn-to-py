@@ -609,5 +609,6 @@ class ConvertionAppView(AAppView):
         self.service = service
         self.update_source_and_direction(service.sources())
 
-    def update_service(self, service: IConvertService) -> None:
+    def update_service(self, service: IConvertService) -> bool:
         log.info(f"Dont updating service {service}")
+        return False

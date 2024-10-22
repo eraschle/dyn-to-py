@@ -31,11 +31,22 @@ class ConvertService:
     def load_config(self, file_path: Path) -> None:
         if not file_path.exists():
             raise FileNotFoundError(f"{file_path} does not exist")
+        self.config_path = file_path
         self._handler = ConvertHandler(
             source_name=None,
             convert=factory.convert_config(file_path.resolve()),
             direction=Direction.UNKNOWN,
         )
+
+    @property
+    def can_save_config(self) -> bool:
+        return self.config.can_save()
+
+    def config_save(self):
+        self.config.save()
+
+    def config_save_as(self, file_path: Path):
+        self.config.save_as(file_path)
 
     def create_config(self, directory_path: Path) -> Path:
         if not directory_path.exists():
@@ -84,11 +95,26 @@ class ConvertService:
     def sources(self) -> List[SourceConfig]:
         return self.config.sources
 
-    def update_sources(self, configs: List[SourceConfig]) -> None:
+    def _same_sources(self, configs: List[SourceConfig]) -> bool:
+        existing = self.sources()
+        return all(src in existing for src in configs)
+
+    def update_sources(self, configs: List[SourceConfig]) -> bool:
+        changed = not self._same_sources(configs)
         self.config.set_sources(configs)
+        return changed
 
     def actions(self) -> Mapping[ActionType, List[ConvertAction]]:
         return self.config.actions
 
-    def update_actions(self, actions: Mapping[ActionType, List[ConvertAction]]):
+    def _action_equal(self, action_type: ActionType, actions: List[ConvertAction]) -> bool:
+        existing = self.actions().get(action_type, [])
+        return all(act in existing for act in actions)
+
+    def _same_actions(self, actions: Mapping[ActionType, List[ConvertAction]]) -> bool:
+        return all(self._action_equal(act, acts) for act, acts in actions.items())
+
+    def update_actions(self, actions: Mapping[ActionType, List[ConvertAction]]) -> bool:
+        changed = not self._same_actions(actions)
         self.config.set_actions(actions)
+        return changed
