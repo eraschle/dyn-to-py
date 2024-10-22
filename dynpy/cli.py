@@ -1,8 +1,8 @@
 import argparse
 from pathlib import Path
 
-from dynpy.core import convert as cvt
-from dynpy.core.convert import Direction
+from dynpy.core import handler as cvt
+from dynpy.core.handler import Direction
 from dynpy.service import dynamo, python
 
 

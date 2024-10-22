@@ -4,7 +4,7 @@ from typing import Dict, Iterable, List, Mapping
 
 from dynpy.core import factory
 from dynpy.core.context import DynamoFileContext
-from dynpy.core.convert import ConvertHandler
+from dynpy.core.handler import ConvertHandler
 from dynpy.core.models import PythonFile
 
 log = logging.getLogger(__name__)

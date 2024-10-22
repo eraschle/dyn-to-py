@@ -2,10 +2,10 @@ import logging
 from pathlib import Path
 from typing import Callable, List, Mapping
 
-from dynpy.core import convert as hdl
 from dynpy.core import factory
+from dynpy.core import handler as hdl
 from dynpy.core.actions import ActionType, ConvertAction
-from dynpy.core.convert import ConvertHandler, Direction
+from dynpy.core.handler import ConvertHandler, Direction
 from dynpy.core.models import ConvertConfig, SourceConfig
 from dynpy.service import dynamo, python
 

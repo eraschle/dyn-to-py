@@ -9,7 +9,7 @@ from typing import Callable, Iterable, List, Optional, Tuple
 from dynpy import ressources as res
 from dynpy.core import factory
 from dynpy.core.context import DynamoFileContext
-from dynpy.core.convert import ConvertHandler, Direction
+from dynpy.core.handler import ConvertHandler, Direction
 from dynpy.core.models import ContentNode, PythonFile, SourceConfig
 from dynpy.service import IConvertService, dynamo, python
 from dynpy.ui.models.uiargs import UiArgs

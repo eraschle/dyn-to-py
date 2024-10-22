@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import List, Mapping, Protocol
 
 from dynpy.core.actions import ActionType, ConvertAction
-from dynpy.core.convert import ConvertHandler, Direction
+from dynpy.core.handler import ConvertHandler, Direction
 from dynpy.core.models import SourceConfig
 
 

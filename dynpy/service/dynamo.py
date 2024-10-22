@@ -4,7 +4,7 @@ from typing import List, Sequence
 
 from dynpy.core import factory, reader
 from dynpy.core.context import DynamoFileContext
-from dynpy.core.convert import ConvertHandler
+from dynpy.core.handler import ConvertHandler
 from dynpy.core.models import CodeNode, ContentNode, SourceConfig
 
 
