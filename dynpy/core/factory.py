@@ -5,7 +5,12 @@ from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Type
 
 from dynpy.core import context as ctx
 from dynpy.core import reader
-from dynpy.core.actions import ActionType, AConvertAction, RemoveConvertAction, ReplaceConvertAction
+from dynpy.core.actions import (
+    ActionType,
+    AConvertAction,
+    RemoveConvertAction,
+    ReplaceConvertAction,
+)
 from dynpy.core.models import (
     CodeNode,
     ContentNode,
@@ -33,14 +38,22 @@ def _create_sources(content: Iterable[Mapping[str, Any]]) -> List[SourceConfig]:
 
 
 def _get_action(action_type: ActionType) -> Type[AConvertAction]:
-    return ReplaceConvertAction if action_type == ActionType.REPLACE else RemoveConvertAction
+    return (
+        ReplaceConvertAction
+        if action_type == ActionType.REPLACE
+        else RemoveConvertAction
+    )
 
 
-def _get_actions(action_type: ActionType, content: Iterable[Mapping[str, Any]]) -> List[AConvertAction]:
+def _get_actions(
+    action_type: ActionType, content: Iterable[Mapping[str, Any]]
+) -> List[AConvertAction]:
     return [_get_action(action_type)(**act) for act in content]
 
 
-def _create_actions(action_content: Mapping[str, Any]) -> Dict[ActionType, List[AConvertAction]]:
+def _create_actions(
+    action_content: Mapping[str, Any],
+) -> Dict[ActionType, List[AConvertAction]]:
     actions = {}
     for action, content in action_content.items():
         action_type = ActionType(action)
@@ -127,7 +140,9 @@ def node_view(view: Mapping[str, Any]) -> NodeView:
     )
 
 
-def content_node(node: CodeNode, view: Mapping[str, Any], path: Path) -> ContentNode:
+def content_node(
+    node: CodeNode, view: Mapping[str, Any], path: Path
+) -> ContentNode:
     return ContentNode(
         node=node,
         view=node_view(view),
@@ -173,7 +188,9 @@ _INFO_SEPARATOR: str = ";"
 
 def node_info(node_info: str) -> Optional[NodeInfo]:
     if not node_info.startswith(_INFO_PREFIX):
-        log.error(f"Invalid NodeInfo > does not start with {_INFO_PREFIX}: {node_info}")
+        log.error(
+            f"Invalid NodeInfo > does not start with {_INFO_PREFIX}: {node_info}"
+        )
         return None
     node_info = node_info.removeprefix(_INFO_PREFIX).strip()
     node_info = node_info.replace("\"", "")
@@ -184,8 +201,12 @@ def node_info(node_info: str) -> Optional[NodeInfo]:
     infos = [_trim_values(info) for info in infos]
     infos = [_repair_path(info) for info in infos]
     infos = [info for info in infos if len(info) == 2]
-    info_dict: Mapping[str, Any] = {_info_key(key): value.strip() for key, value in infos}
-    info_dict = {key: _info_value(key, value) for key, value in info_dict.items()}
+    info_dict: Mapping[str, Any] = {
+        _info_key(key): value.strip() for key, value in infos
+    }
+    info_dict = {
+        key: _info_value(key, value) for key, value in info_dict.items()
+    }
     try:
         return NodeInfo(**info_dict)
     except TypeError:
@@ -202,7 +223,9 @@ def node_info_to_dict(info: NodeInfo) -> Dict[str, str]:
 
 
 def _info_as_str(info: NodeInfo) -> str:
-    infos = [f"{key}: {value}" for key, value in node_info_to_dict(info).items()]
+    infos = [
+        f"{key}: {value}" for key, value in node_info_to_dict(info).items()
+    ]
     info_str = f"{_INFO_SEPARATOR} ".join(infos)
     return f"{_INFO_PREFIX} {info_str} {_INFO_SUFFIX}"
 
@@ -240,7 +263,9 @@ def clean_empty_lines(lines: List[str]) -> List[str]:
     return clean_ending_empty_lines(clean_beginning_empty_lines(lines))
 
 
-def python_to_dynamo_code(code_lines: List[str], action_func: ActionFunc) -> List[str]:
+def python_to_dynamo_code(
+    code_lines: List[str], action_func: ActionFunc
+) -> List[str]:
     code_lines = action_func(code_lines)
     code_lines = clean_empty_lines(code_lines)
     return code_lines

@@ -224,7 +224,9 @@ class SourceFileModel(AFileViewModel):
             if len(ctx.library_dependencies) > 0:
                 lines.append("Dependencies:")
                 if len(ctx.package_dependencies) > 0:
-                    lines.append(f"- {_number(len(ctx.package_dependencies))} Package Dependencies")
+                    lines.append(
+                        f"- {_number(len(ctx.package_dependencies))} Package Dependencies"
+                    )
                 if len(ctx.external_dependencies) > 0:
                     lines.append(
                         f"- {_number(len(ctx.external_dependencies))} External Dependencies"
@@ -271,7 +273,9 @@ class ExportFileModel(ANodeViewModel):
         return lines
 
     def update_code(self, func: Callable[[List[str]], List[str]]) -> None:
-        raise NotImplementedError(f"ExportFileModel does not support update_code with {func}")
+        raise NotImplementedError(
+            f"ExportFileModel does not support update_code with {func}"
+        )
 
 
 class ExportDirModel(AFileViewModel):
@@ -294,4 +298,6 @@ class ExportDirModel(AFileViewModel):
         return lines
 
     def update_code(self, func: Callable[[List[str]], List[str]]) -> None:
-        raise NotImplementedError(f"ExportDirModel does not support update_code with {func}")
+        raise NotImplementedError(
+            f"ExportDirModel does not support update_code with {func}"
+        )

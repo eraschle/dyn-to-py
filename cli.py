@@ -46,7 +46,9 @@ def main():
     args = _parse_argument()
     if args.create_config is not None:
         return cvt.create_config(args.create_config)
-    handler = cvt.create_handler(args.config, args.source, args.do_import, args.do_export)
+    handler = cvt.create_handler(
+        args.config, args.source, args.do_import, args.do_export
+    )
     if handler.direction == Direction.TO_PYTHON:
         dynamo.to_python(handler)
     else:

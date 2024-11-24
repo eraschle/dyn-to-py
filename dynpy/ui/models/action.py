@@ -2,14 +2,21 @@ import tkinter as tk
 from typing import Iterable, List, Mapping, Optional, Type
 
 from dynpy.core import factory
-from dynpy.core.actions import ActionType, AConvertAction, RemoveConvertAction, ReplaceConvertAction
+from dynpy.core.actions import (
+    ActionType,
+    AConvertAction,
+    RemoveConvertAction,
+    ReplaceConvertAction,
+)
 from dynpy.ui.models.uiargs import UiArgs
 from dynpy.ui.models.views import IView
 from dynpy.ui.widget.editable import EditableListboxFrame
 from dynpy.ui.widget.entries import LabelEntry, LabelEntryOptions
 
 
-def _editable_listbox_frame(master: tk.Misc, text: str, args: UiArgs) -> EditableListboxFrame:
+def _editable_listbox_frame(
+    master: tk.Misc, text: str, args: UiArgs
+) -> EditableListboxFrame:
     frm_label = tk.LabelFrame(master=master, text=text)
     frm_label.grid(cnf=args.grid_args(sticky=tk.NSEW))
     edit_args = args.create(row=0, column=0, sticky=tk.NSEW)
@@ -86,7 +93,9 @@ class ReplaceActionLabelFrame(tk.LabelFrame, IView[ReplaceConvertAction]):
         self.edt_contain.update_values(model.contains)
 
 
-class ConvertActionView(tk.Frame, IView[Mapping[ActionType, List[AConvertAction]]]):
+class ConvertActionView(
+    tk.Frame, IView[Mapping[ActionType, List[AConvertAction]]]
+):
     def __init__(self, master: tk.Misc):
         super().__init__(master)
         args = UiArgs(sticky=tk.NSEW)
@@ -101,7 +110,9 @@ class ConvertActionView(tk.Frame, IView[Mapping[ActionType, List[AConvertAction]
         self.remove = RemoveActionLabelFrame(self, "Remove Action")
         self.remove.grid(cnf=args.grid_args())
 
-    def _get_action[T](self, actions: Iterable[AConvertAction], action: Type[T]) -> List[T]:
+    def _get_action[T](
+        self, actions: Iterable[AConvertAction], action: Type[T]
+    ) -> List[T]:
         return [act for act in actions if isinstance(act, action)]
 
     def _replace_actions(self) -> List[ReplaceConvertAction]:

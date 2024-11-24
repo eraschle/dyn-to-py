@@ -8,7 +8,12 @@ from dynpy.core import factory
 from dynpy.core.handler import ConvertHandler, Direction
 from dynpy.core.models import SourceConfig
 from dynpy.service import python
-from dynpy.ui.convert.models import AFileViewModel, ANodeViewModel, ExportDirModel, SourceFileModel
+from dynpy.ui.convert.models import (
+    AFileViewModel,
+    ANodeViewModel,
+    ExportDirModel,
+    SourceFileModel,
+)
 
 if TYPE_CHECKING:
     from dynpy.ui.convert.view import ConvertAppView
@@ -94,9 +99,15 @@ class ConvertController:
         self.py_models: List[AFileViewModel] = []
         self.view_models: List[AFileViewModel] = []
 
-        self.var_source_text = tk.StringVar(master=view.frm_menu, value="Source-Config:")
-        self.var_direction_text = tk.StringVar(master=view.frm_menu, value="Convert Direction:")
-        self.var_diff_text = tk.StringVar(master=view.frm_menu, value=self.show_diff)
+        self.var_source_text = tk.StringVar(
+            master=view.frm_menu, value="Source-Config:"
+        )
+        self.var_direction_text = tk.StringVar(
+            master=view.frm_menu, value="Convert Direction:"
+        )
+        self.var_diff_text = tk.StringVar(
+            master=view.frm_menu, value=self.show_diff
+        )
         self.var_show_diff = tk.BooleanVar(master=view.frm_menu, value=False)
 
     def clean_code_diff(self):
@@ -195,7 +206,9 @@ class ConvertController:
             view_models.append(view_model)
         return sorted(view_models)
 
-    def get_export_models(self, handler: ConvertHandler) -> List[AFileViewModel]:
+    def get_export_models(
+        self, handler: ConvertHandler
+    ) -> List[AFileViewModel]:
         view_models = []
         source = handler.source
         group_dyn_files = python.python_file_group(handler)

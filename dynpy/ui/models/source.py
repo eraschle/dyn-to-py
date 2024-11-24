@@ -7,7 +7,11 @@ from typing import Callable, List, Optional, cast
 from dynpy.core.models import SourceConfig
 from dynpy.ui.models.uiargs import UiArgs
 from dynpy.ui.models.views import IView
-from dynpy.ui.widget.entries import LabelEntry, LabelEntryOptions, LabelPathEntry
+from dynpy.ui.widget.entries import (
+    LabelEntry,
+    LabelEntryOptions,
+    LabelPathEntry,
+)
 
 log = logging.getLogger(__name__)
 
@@ -18,7 +22,9 @@ def is_valid_path(current_path: str) -> bool:
 
 
 class SourceViewModel:
-    def __init__(self, parent: tk.Misc, is_valid_name_callback: Callable[[str], bool]):
+    def __init__(
+        self, parent: tk.Misc, is_valid_name_callback: Callable[[str], bool]
+    ):
         self.is_valid_name_cb = is_valid_name_callback
         self.model = SourceConfig(name="", source="", export="")
         self.name_value = tk.StringVar(master=parent, value=self.model.name)
@@ -61,7 +67,9 @@ class SourceViewModel:
 
     @property
     def is_valid(self) -> bool:
-        return self.is_valid_name and self.is_valid_source and self.is_valid_export
+        return (
+            self.is_valid_name and self.is_valid_source and self.is_valid_export
+        )
 
     @property
     def invalid_messages(self) -> List[str]:
@@ -117,15 +125,21 @@ class SourceView(tk.Frame, IView[SourceConfig]):
         self.frm_buttons.grid_columnconfigure(
             **btn_args.column_args(weight=0, minsize=btn_args.east_min)
         )
-        self.btn_create = tk.Button(self.frm_buttons, text="Create", command=self.on_create)
+        self.btn_create = tk.Button(
+            self.frm_buttons, text="Create", command=self.on_create
+        )
         self.btn_create.grid(cnf=btn_args.grid_args())
-        self.btn_save = tk.Button(self.frm_buttons, text="Save", command=self.on_save)
+        self.btn_save = tk.Button(
+            self.frm_buttons, text="Save", command=self.on_save
+        )
         self.btn_save.grid(cnf=btn_args.grid_args())
         btn_args.add_column()
         self.frm_buttons.grid_columnconfigure(
             **btn_args.column_args(weight=0, minsize=btn_args.east_min)
         )
-        self.btn_cancel = tk.Button(self.frm_buttons, text="Cancel", command=self.on_cancel)
+        self.btn_cancel = tk.Button(
+            self.frm_buttons, text="Cancel", command=self.on_cancel
+        )
         self.btn_cancel.grid(cnf=btn_args.grid_args())
         btn_args.add_column()
         self.frm_buttons.grid_columnconfigure(**btn_args.column_args(weight=1))
@@ -165,7 +179,9 @@ class SourceView(tk.Frame, IView[SourceConfig]):
         msg.showwarning("Invalid model", message)
 
     def on_create(self):
-        model = SourceConfig(name="<Source Name>", source="<Source Path>", export="<Export Path>")
+        model = SourceConfig(
+            name="<Source Name>", source="<Source Path>", export="<Export Path>"
+        )
         self._toggle_buttons(to_normal=False)
         self.update_model(model)
 

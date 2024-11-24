@@ -16,7 +16,9 @@ log = logging.getLogger(__name__)
 class ConvertService:
     def __init__(self):
         self._handler: ConvertHandler | None = None
-        self._convert_func: Mapping[Direction, Callable[[ConvertHandler], None]] = {
+        self._convert_func: Mapping[
+            Direction, Callable[[ConvertHandler], None]
+        ] = {
             Direction.TO_PYTHON: dynamo.to_python,
             Direction.TO_DYNAMO: python.to_dynamo,
         }
@@ -122,14 +124,22 @@ class ConvertService:
     def actions(self) -> Mapping[ActionType, List[AConvertAction]]:
         return self.config.actions
 
-    def _action_equal(self, action_type: ActionType, actions: List[AConvertAction]) -> bool:
+    def _action_equal(
+        self, action_type: ActionType, actions: List[AConvertAction]
+    ) -> bool:
         existing = self.actions().get(action_type, [])
         return all(act in existing for act in actions)
 
-    def _same_actions(self, actions: Mapping[ActionType, List[AConvertAction]]) -> bool:
-        return all(self._action_equal(act, acts) for act, acts in actions.items())
+    def _same_actions(
+        self, actions: Mapping[ActionType, List[AConvertAction]]
+    ) -> bool:
+        return all(
+            self._action_equal(act, acts) for act, acts in actions.items()
+        )
 
-    def update_actions(self, actions: Mapping[ActionType, List[AConvertAction]]) -> bool:
+    def update_actions(
+        self, actions: Mapping[ActionType, List[AConvertAction]]
+    ) -> bool:
         changed = not self._same_actions(actions)
         self.config.set_actions(actions)
         return changed

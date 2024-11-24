@@ -17,7 +17,11 @@ class ProgressBar(tk.Toplevel):
         content.grid_columnconfigure(**args.column_args())
         content.grid_rowconfigure(**args.row_args())
         self.progress_bar = ttk.Progressbar(
-            content, orient="horizontal", length=300, mode="indeterminate", maximum=100
+            content,
+            orient="horizontal",
+            length=300,
+            mode="indeterminate",
+            maximum=100,
         )
         self.progress_bar.grid(cnf=args.grid_args())
         self.lbl_desc = tk.Label(content, text="Please wait...")

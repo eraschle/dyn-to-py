@@ -26,12 +26,16 @@ class ConvertHandler:
             raise ValueError("No source name provided")
         return self.convert.source_by(self.source_name)
 
-    def _apply_func(self, action_type: ActionType, lines: List[str]) -> List[str]:
+    def _apply_func(
+        self, action_type: ActionType, lines: List[str]
+    ) -> List[str]:
         for action in self.convert.actions_by(action_type):
             lines = action.apply(lines)
         return lines
 
-    def restore_func(self, action_type: ActionType, lines: List[str]) -> List[str]:
+    def restore_func(
+        self, action_type: ActionType, lines: List[str]
+    ) -> List[str]:
         for action in self.convert.actions_by(action_type):
             lines = action.restore(lines)
         return lines
@@ -89,7 +93,9 @@ def get_direction(do_import: bool, do_export: bool) -> Direction:
     raise Exception("Can not export and import at the same time")
 
 
-def create_handler(path: Path, name: str, do_import: bool, do_export: bool) -> ConvertHandler:
+def create_handler(
+    path: Path, name: str, do_import: bool, do_export: bool
+) -> ConvertHandler:
     direction = get_direction(do_import=do_import, do_export=do_export)
     return ConvertHandler(
         convert=read_config(path),

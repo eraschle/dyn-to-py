@@ -19,7 +19,9 @@ def content_nodes(context: DynamoFileContext) -> List[ContentNode]:
         view = view_maps.get(node.node_id)
         if view is None:
             raise Exception(f"No view found for node {node.node_id}")
-        nodes.append(factory.content_node(node=node, view=view, path=context.path))
+        nodes.append(
+            factory.content_node(node=node, view=view, path=context.path)
+        )
     return nodes
 
 
@@ -31,7 +33,9 @@ def _get_python_path(node: ContentNode, source: SourceConfig) -> Path:
 
 
 def _create_py_file(node: ContentNode, handler: ConvertHandler):
-    code_lines = factory.code_to_python(node=node, action_func=handler.apply_action)
+    code_lines = factory.code_to_python(
+        node=node, action_func=handler.apply_action
+    )
     path = _get_python_path(node, handler.source)
     reader.write_python(path=path, content=code_lines)
 

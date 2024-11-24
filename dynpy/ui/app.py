@@ -28,10 +28,14 @@ class ConvertMenuFrame(tk.Frame):
         args.add_row()
         self.grid_rowconfigure(**args.row_args(weight=1))
 
-    def _add_button_row(self, views: List[AAppView], args: UiArgs, minsize: int = 200):
+    def _add_button_row(
+        self, views: List[AAppView], args: UiArgs, minsize: int = 200
+    ):
         for view in views:
             args.add_column()
-            self.grid_columnconfigure(**args.column_args(weight=0, minsize=minsize))
+            self.grid_columnconfigure(
+                **args.column_args(weight=0, minsize=minsize)
+            )
             button = view.button(self)
             button.grid(cnf=args.grid_args(sticky=tk.NSEW))
         args.add_column()

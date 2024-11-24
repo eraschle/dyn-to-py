@@ -1,7 +1,16 @@
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, ClassVar, Dict, Iterable, List, Mapping, Optional, OrderedDict
+from typing import (
+    Any,
+    ClassVar,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    OrderedDict,
+)
 
 from dynpy.core import paths as pth
 from dynpy.core import reader
@@ -102,6 +111,7 @@ class PythonFile:
             raise ValueError("No node info provided")
         return Path(self.info.path)
 
+
 def _default_exclude_dirs() -> List[str]:
     return [
         "__pycache__",
@@ -189,14 +199,15 @@ class SourceConfig:
         }
 
 
-
 @dataclass(frozen=True)
 class ConvertConfig:
     extension: ClassVar[str] = "dynpy"
 
     file_path: Optional[Path]
     sources: List[SourceConfig]
-    actions: Dict[ActionType, List[AConvertAction]] = field(default_factory=dict)
+    actions: Dict[ActionType, List[AConvertAction]] = field(
+        default_factory=dict
+    )
 
     def add_source(self, source: SourceConfig) -> None:
         if source in self.sources:
@@ -213,7 +224,9 @@ class ConvertConfig:
         self.sources.clear()
         self.sources.extend(sources)
 
-    def set_actions(self, actions: Mapping[ActionType, List[AConvertAction]]) -> None:
+    def set_actions(
+        self, actions: Mapping[ActionType, List[AConvertAction]]
+    ) -> None:
         self.actions.clear()
         self.actions.update(actions)
 
@@ -226,7 +239,9 @@ class ConvertConfig:
     def to_dict(self) -> Dict[str, Any]:
         return {
             "configs": [config.to_dict() for config in self.sources],
-            "actions": {action: self._action_dict(action) for action in ActionType},
+            "actions": {
+                action: self._action_dict(action) for action in ActionType
+            },
         }
 
     def source_by(self, name: str) -> SourceConfig:

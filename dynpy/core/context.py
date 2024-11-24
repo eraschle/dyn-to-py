@@ -84,11 +84,19 @@ class DynamoFileContext:
 
     @property
     def package_dependencies(self) -> List[Mapping[str, Any]]:
-        return [dep for dep in self.library_dependencies if is_package_dependency(dep)]
+        return [
+            dep
+            for dep in self.library_dependencies
+            if is_package_dependency(dep)
+        ]
 
     @property
     def external_dependencies(self) -> List[Mapping[str, Any]]:
-        return [dep for dep in self.library_dependencies if is_external_dependency(dep)]
+        return [
+            dep
+            for dep in self.library_dependencies
+            if is_external_dependency(dep)
+        ]
 
     @property
     def annotations(self) -> List[Mapping[str, Any]]:

@@ -47,7 +47,9 @@ class RemoveConvertAction(AConvertAction):
 
 
 class ReplaceConvertAction(AConvertAction):
-    def __init__(self, value: str, contains: List[str], regex: List[str]) -> None:
+    def __init__(
+        self, value: str, contains: List[str], regex: List[str]
+    ) -> None:
         super().__init__()
         self.value = value
         self._value_wo_spaces = self._wo_spaces(value)

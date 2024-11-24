@@ -12,10 +12,15 @@ log = logging.getLogger(__name__)
 
 def _create_python_files(handler: ConvertHandler) -> List[PythonFile]:
     source = handler.source
-    return [factory.python_file(path, handler.apply_action) for path in source.export_files()]
+    return [
+        factory.python_file(path, handler.apply_action)
+        for path in source.export_files()
+    ]
 
 
-def python_file_group(handler: ConvertHandler) -> Mapping[Path, List[PythonFile]]:
+def python_file_group(
+    handler: ConvertHandler,
+) -> Mapping[Path, List[PythonFile]]:
     py_map = {}
     for python in _create_python_files(handler):
         py_path = python.path.parent
@@ -25,7 +30,9 @@ def python_file_group(handler: ConvertHandler) -> Mapping[Path, List[PythonFile]
     return py_map
 
 
-def _dynamo_file_group(handler: ConvertHandler) -> Mapping[Path, Iterable[PythonFile]]:
+def _dynamo_file_group(
+    handler: ConvertHandler,
+) -> Mapping[Path, Iterable[PythonFile]]:
     dyn_map: Dict[Path, List[PythonFile]] = {}
     for python in _create_python_files(handler):
         if python.info is None:
@@ -41,7 +48,9 @@ def _dynamo_file_group(handler: ConvertHandler) -> Mapping[Path, Iterable[Python
     return dyn_map
 
 
-def replace_code_in(py_files: Iterable[PythonFile], context: DynamoFileContext) -> None:
+def replace_code_in(
+    py_files: Iterable[PythonFile], context: DynamoFileContext
+) -> None:
     for py_file in py_files:
         if py_file.info is None:
             continue

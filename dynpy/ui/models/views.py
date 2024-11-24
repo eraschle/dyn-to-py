@@ -50,7 +50,9 @@ class AAppView(ABC, tk.Frame):
     def _init_view(self):
         pass
 
-    def _load_icon(self, frame: tk.Frame, icon: res.DynPyResource) -> tk.PhotoImage:
+    def _load_icon(
+        self, frame: tk.Frame, icon: res.DynPyResource
+    ) -> tk.PhotoImage:
         path = res.icon_path(icon).absolute()
         if not path.exists():
             raise FileNotFoundError(f"Icon file not found: {path}")
@@ -63,7 +65,10 @@ class AAppView(ABC, tk.Frame):
             msg.showerror("Error", "Configuration file does not exist.")
         except Exception:
             trace = traceback.format_exc()
-            msg.showerror("Error", f"An error occurred while loading config file:\n{trace}")
+            msg.showerror(
+                "Error",
+                f"An error occurred while loading config file:\n{trace}",
+            )
 
     def ask_for_path(self) -> Optional[Path]:
         service = self.app.service
@@ -94,7 +99,11 @@ class AAppView(ABC, tk.Frame):
         text, icon = self._button_text_and_icon()
         self.image = self._load_icon(frame, icon)
         self.btn_view = tk.Button(
-            frame, text=text, command=self._button_command, image=self.image, compound=tk.TOP
+            frame,
+            text=text,
+            command=self._button_command,
+            image=self.image,
+            compound=tk.TOP,
         )
         self.btn_view.bind("<Button-1>", self._on_button_click)
         return self.btn_view

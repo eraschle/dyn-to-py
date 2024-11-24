@@ -52,7 +52,11 @@ def replace_path(path: Path, from_path: str, to_path: str) -> Path:
     return Path(path_str)
 
 
-def get_files(current: Path, is_source_cb: Callable[[Path], bool], is_exclude_cb: Callable[[Path], bool]) -> List[Path]:
+def get_files(
+    current: Path,
+    is_source_cb: Callable[[Path], bool],
+    is_exclude_cb: Callable[[Path], bool],
+) -> List[Path]:
     if current.is_file():
         return [current] if is_source_cb(current) else []
     dyn_files = []

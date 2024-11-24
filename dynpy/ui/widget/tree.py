@@ -2,7 +2,11 @@ import tkinter as tk
 from tkinter import ttk
 from typing import Dict, List, Optional
 
-from dynpy.ui.convert.models import AFileViewModel, ANodeViewModel, ATreeViewModel
+from dynpy.ui.convert.models import (
+    AFileViewModel,
+    ANodeViewModel,
+    ATreeViewModel,
+)
 from dynpy.ui.convert.controller import ConvertController
 from dynpy.ui.models.uiargs import UiArgs
 
@@ -20,7 +24,9 @@ class ModelListBox(tk.LabelFrame):
         args.add_row()
         self.grid_rowconfigure(**args.row_args(weight=1))
         self.tree_files = ttk.Treeview(self)
-        self.tree_files.bind("<<TreeviewSelect>>", self.controller.on_tree_select)
+        self.tree_files.bind(
+            "<<TreeviewSelect>>", self.controller.on_tree_select
+        )
         self.tree_files.grid(cnf=args.grid_args(sticky=tk.NSEW))
 
     def add_heading_frame(self, args_frame: UiArgs) -> tk.StringVar:
@@ -28,7 +34,9 @@ class ModelListBox(tk.LabelFrame):
         frm_root.grid(cnf=args_frame.grid_args(columnspan=2))
         args = args_frame.create(row=0, column=0, sticky=tk.NSEW)
         frm_root.grid_rowconfigure(**args.row_args(weight=0))
-        frm_root.grid_columnconfigure(**args.column_args(weight=0, minsize=args.east_min))
+        frm_root.grid_columnconfigure(
+            **args.column_args(weight=0, minsize=args.east_min)
+        )
         lbl_root = tk.Label(frm_root, text="Root-Path", anchor=tk.W)
         lbl_root.grid(cnf=args.grid_args(sticky=tk.W))
         args.add_column()
@@ -110,11 +118,15 @@ class ModelListBox(tk.LabelFrame):
 
     def update_children_tags(self, view_model: AFileViewModel):
         for child in view_model.children:
-            self.tree_files.item(child.tree_id, tags=self.controller.node_tags_for(child))
+            self.tree_files.item(
+                child.tree_id, tags=self.controller.node_tags_for(child)
+            )
 
     def update_tags(self):
         for model in self.controller.view_models:
-            self.tree_files.item(model.tree_id, tags=self.controller.model_tags_for(model))
+            self.tree_files.item(
+                model.tree_id, tags=self.controller.model_tags_for(model)
+            )
             self.update_children_tags(model)
 
     def update_files(self):

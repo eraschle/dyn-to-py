@@ -90,7 +90,9 @@ class UiArgs:
         args.update(kwargs)
         return args
 
-    def _get_config_args(self, name: str, **kwargs: Unpack[ConfigArgs]) -> ConfigArgs:
+    def _get_config_args(
+        self, name: str, **kwargs: Unpack[ConfigArgs]
+    ) -> ConfigArgs:
         args = self.as_dict(*(name,))
         args["index"] = args.pop(name, 0)
         if "weight" not in kwargs:

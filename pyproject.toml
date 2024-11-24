@@ -13,8 +13,8 @@ python = "^3.12"
 debugpy = "^1.8.6"
 ruff-lsp = "^0.0.59"
 ruff = "^0.8.0"
-pyright = "^1.1.389"
 isort = "^5.13.2"
+basedpyright = "^1.22.0"
 
 [build-system]
 requires = ["poetry-core"]

@@ -142,7 +142,9 @@ class IConvertService(Protocol):
             The actions"""
         ...
 
-    def update_actions(self, actions: Mapping[ActionType, List[AConvertAction]]) -> bool:
+    def update_actions(
+        self, actions: Mapping[ActionType, List[AConvertAction]]
+    ) -> bool:
         """Update the actions
 
         Update the actions with the given mapping.
@@ -213,7 +215,9 @@ class IConvertService(Protocol):
             The path of the configuration file"""
         ...
 
-    def code_diff(self, source: Tuple[str, List[str]], other: Tuple[str, List[str]]) -> Iterable[str]:
+    def code_diff(
+        self, source: Tuple[str, List[str]], other: Tuple[str, List[str]]
+    ) -> Iterable[str]:
         """Return the code difference between source and export code.
 
         Return the code difference between the dynamo python code
